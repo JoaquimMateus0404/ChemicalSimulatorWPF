@@ -11,27 +11,34 @@
   <!-- Adicione ao seu .csproj -->
   <ItemGroup>
     <!-- MaterialDesign -->
-    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
-    <PackageReference Include="MaterialDesignColors" Version="2.1.4" />
+    <PackageReference Include="HelixToolkit.Wpf" Version="3.1.2" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
     
     <!-- Visualização 3D -->
-    <PackageReference Include="HelixToolkit.Wpf" Version="2.24.0" />
     
     <!-- Gráficos -->
-    <PackageReference Include="OxyPlot.Wpf" Version="2.1.2" />
+    <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
     
     <!-- Controles Adicionais -->
-    <PackageReference Include="MahApps.Metro" Version="2.4.10" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.11" />
     
     <!-- MVVM -->
-    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+    <PackageReference Include="Prism.Wpf" Version="9.0.537" />
     
     <!-- Exportação -->
-    <PackageReference Include="QuestPDF" Version="2023.12.0" />
-    <PackageReference Include="CsvHelper" Version="30.0.1" />
+    <PackageReference Include="QuestPDF" Version="2025.12.2" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     
     <!-- Utilitários -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Controls\" />
+    <Folder Include="Services\" />
+    <Folder Include="Views\" />
+    <Folder Include="ViewModels\" />
   </ItemGroup>
 
 </Project>
