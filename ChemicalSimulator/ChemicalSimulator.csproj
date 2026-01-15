@@ -33,12 +33,5 @@
     <!-- Utilitários -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Controls\" />
-    <Folder Include="Services\" />
-    <Folder Include="Views\" />
-    <Folder Include="ViewModels\" />
-  </ItemGroup>
 
 </Project>

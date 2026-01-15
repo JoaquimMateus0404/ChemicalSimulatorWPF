@@ -1,0 +1,22 @@
+{
+  "elements": [
+    {
+      "atomicNumber": 1,
+      "symbol": "H",
+      "name": "Hidrogênio",
+      "atomicMass": 1.008,
+      "electronegativity": 2.20,
+      "category": "NonMetal",
+      "vanDerWaalsRadius": 120
+    },
+    {
+      "atomicNumber": 6,
+      "symbol": "C",
+      "name": "Carbono",
+      "atomicMass": 12.011,
+      "electronegativity": 2.55,
+      "category": "NonMetal",
+      "vanDerWaalsRadius": 170
+    }
+  ]
+}
