@@ -8,4 +8,30 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <!-- Adicione ao seu .csproj -->
+  <ItemGroup>
+    <!-- MaterialDesign -->
+    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+    <PackageReference Include="MaterialDesignColors" Version="2.1.4" />
+    
+    <!-- Visualização 3D -->
+    <PackageReference Include="HelixToolkit.Wpf" Version="2.24.0" />
+    
+    <!-- Gráficos -->
+    <PackageReference Include="OxyPlot.Wpf" Version="2.1.2" />
+    
+    <!-- Controles Adicionais -->
+    <PackageReference Include="MahApps.Metro" Version="2.4.10" />
+    
+    <!-- MVVM -->
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+    
+    <!-- Exportação -->
+    <PackageReference Include="QuestPDF" Version="2023.12.0" />
+    <PackageReference Include="CsvHelper" Version="30.0.1" />
+    
+    <!-- Utilitários -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
 </Project>
