@@ -11,329 +11,696 @@
              Background="{DynamicResource MaterialDesign.Brush.Background}">
 
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:ElementCategoryToColorConverter x:Key="ElementCategoryToColorConverter"/>
         <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:BooleanToBackgroundConverter x:Key="BooleanToBackgroundConverter"/>
+        <converters:SeverityToColorConverter x:Key="SeverityToColorConverter"/>
+        
+        <!-- Style para Card -->
+        <Style x:Key="InfoCard" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
     </UserControl.Resources>
+    
+    <!-- Atalhos de Teclado -->
+    <UserControl.InputBindings>
+        <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}"/>
+        <KeyBinding Key="Y" Modifiers="Ctrl" Command="{Binding RedoCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveMoleculeCommand}"/>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding ClearMoleculeCommand}"/>
+        <KeyBinding Key="E" Modifiers="Ctrl" Command="{Binding ExportCommand}"/>
+        <KeyBinding Key="F1" Command="{Binding ShowTutorialCommand}"/>
+        <KeyBinding Key="Delete" Command="{Binding DeleteSelectedCommand}"/>
+    </UserControl.InputBindings>
 
-    <Grid Margin="16">
+    <Grid Margin="8">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
+            <!-- Painel Esquerdo: Ferramentas -->
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="8"/>
+            <!-- Área Central: Canvas 2D/3D -->
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="8"/>
+            <!-- Painel Direito: Análise e Validação -->
+            <ColumnDefinition Width="320"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Painel Esquerdo: Seleção de Elementos -->
-        <materialDesign:Card Grid.Column="0" Margin="0,0,8,0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Cabeçalho -->
-                <Border Grid.Row="0" Background="{DynamicResource MaterialDesign.Brush.Primary}" Padding="16">
+        <!-- ========================================== -->
+        <!-- PAINEL ESQUERDO: FERRAMENTAS E ELEMENTOS -->
+        <!-- ========================================== -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Header -->
+                <materialDesign:Card Style="{StaticResource InfoCard}" Background="{DynamicResource PrimaryHueMidBrush}">
                     <StackPanel>
-                        <TextBlock Text="🧪 Elementos Químicos" FontSize="18" FontWeight="Bold" 
-                                 Foreground="White"/>
-                        <TextBlock Text="Selecione para adicionar" FontSize="12" Foreground="White" Opacity="0.9"/>
+                        <TextBlock Text="🧪 Molecule Builder" 
+                                   FontSize="20" FontWeight="Bold" 
+                                   Foreground="White" 
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Construtor de Moléculas" 
+                                   FontSize="12" 
+                                   Foreground="White" 
+                                   Opacity="0.9"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
-                </Border>
+                </materialDesign:Card>
 
-                <!-- Busca -->
-                <TextBox Grid.Row="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                        materialDesign:HintAssist.Hint="Buscar elemento..."
-                        materialDesign:TextFieldAssist.HasClearButton="True"
-                        materialDesign:TextFieldAssist.PrefixText="🔍"
-                        Margin="16,16,16,8"/>
-
-                <!-- Lista de Elementos -->
-                <ListBox Grid.Row="2" ItemsSource="{Binding FilteredElements}"
-                        SelectedItem="{Binding SelectedElement}"
-                        Margin="8">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Padding="8" CornerRadius="4" Margin="4">
-                                <Border.Background>
-                                    <SolidColorBrush Color="{Binding Category, Converter={StaticResource ElementCategoryToColorConverter}}" 
-                                                   Opacity="0.3"/>
-                                </Border.Background>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="50"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Primary}"
-                                          CornerRadius="25" Width="40" Height="40">
-                                        <TextBlock Text="{Binding Symbol}" FontSize="16" FontWeight="Bold"
-                                                 Foreground="White" HorizontalAlignment="Center" 
-                                                 VerticalAlignment="Center"/>
-                                    </Border>
-
-                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="14"/>
-                                        <TextBlock FontSize="11" Opacity="0.7">
-                                            <Run Text="Z="/>
-                                            <Run Text="{Binding AtomicNumber}"/>
-                                            <Run Text=" | "/>
-                                            <Run Text="{Binding AtomicMass, StringFormat=F2}"/>
-                                            <Run Text=" u"/>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <!-- Templates Rápidos -->
-                <StackPanel Grid.Row="3" Margin="16,8,16,16">
-                    <TextBlock Text="⚡ Templates Rápidos" FontWeight="Medium" Margin="0,0,0,8"/>
-                    <WrapPanel>
-                        <Button Content="H₂O" Command="{Binding LoadTemplateCommand}" 
-                               CommandParameter="water" Style="{StaticResource MaterialDesignOutlinedButton}"
-                               Margin="4"/>
-                        <Button Content="CH₄" Command="{Binding LoadTemplateCommand}" 
-                               CommandParameter="methane" Style="{StaticResource MaterialDesignOutlinedButton}"
-                               Margin="4"/>
-                        <Button Content="CO₂" Command="{Binding LoadTemplateCommand}" 
-                               CommandParameter="co2" Style="{StaticResource MaterialDesignOutlinedButton}"
-                               Margin="4"/>
-                        <Button Content="NH₃" Command="{Binding LoadTemplateCommand}" 
-                               CommandParameter="ammonia" Style="{StaticResource MaterialDesignOutlinedButton}"
-                               Margin="4"/>
-                    </WrapPanel>
-                </StackPanel>
-            </Grid>
-        </materialDesign:Card>
-
-        <!-- Painel Central: Visualização 3D -->
-        <materialDesign:Card Grid.Column="1" Margin="4,0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Cabeçalho -->
-                <Border Grid.Row="0" Background="{DynamicResource MaterialDesign.Brush.Primary}" Padding="16">
+                <!-- Modo Educacional -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
                     <StackPanel>
-                        <TextBlock Text="🔬 Visualização 3D da Molécula" FontSize="18" FontWeight="Bold" 
-                                 Foreground="White"/>
-                        <TextBlock Text="{Binding MoleculeName}" FontSize="14" Foreground="White" Opacity="0.9"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Viewport 3D -->
-                <Grid Grid.Row="1" Background="#F5F5F5">
-                    <helix:HelixViewport3D x:Name="Viewport3D" 
-                                          ShowCoordinateSystem="True"
-                                          ShowViewCube="True"
-                                          IsInertiaEnabled="True"
-                                          ZoomExtentsWhenLoaded="True">
-                        
-                        <!-- Iluminação -->
-                        <helix:DefaultLights/>
-
-                        <!-- Átomos -->
-                        <ModelVisual3D x:Name="MoleculeModel">
-                            <!-- Átomos serão adicionados dinamicamente no code-behind -->
-                        </ModelVisual3D>
-                    </helix:HelixViewport3D>
-
-                    <!-- Mensagem quando vazio -->
-                    <TextBlock Text="Adicione átomos para começar a construir sua molécula"
-                             FontSize="20" FontStyle="Italic" Opacity="0.5"
-                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                             Visibility="{Binding CurrentAtoms.Count, Converter={StaticResource CountToVisibilityConverter}}"/>
-                </Grid>
-
-                <!-- Controles da Visualização -->
-                <Border Grid.Row="2" Background="{DynamicResource MaterialDesign.Brush.Card.Background}" Padding="16">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="🔄 Otimizar Geometria" 
-                               Command="{Binding OptimizeGeometryCommand}"
-                               Style="{StaticResource MaterialDesignRaisedButton}"
-                               Margin="0,0,8,0"/>
-                        <Button Content="🔍 Zoom Extents" 
-                               Click="ZoomExtents_Click"
-                               Style="{StaticResource MaterialDesignOutlinedButton}"
-                               Margin="0,0,8,0"/>
-                        <ToggleButton Content="🌐 Rotação Automática" x:Name="AutoRotateToggle"
-                                    Click="AutoRotate_Click"
-                                    Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </materialDesign:Card>
-
-        <!-- Painel Direito: Propriedades e Controles -->
-        <materialDesign:Card Grid.Column="2" Margin="8,0,0,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <!-- Informações da Molécula -->
-                    <Border Background="{DynamicResource MaterialDesign.Brush.Primary}" Padding="16">
-                        <TextBlock Text="📊 Propriedades" FontSize="18" FontWeight="Bold" 
-                                 Foreground="White"/>
-                    </Border>
-
-                    <StackPanel Margin="16">
-                        <TextBox Text="{Binding MoleculeName, UpdateSourceTrigger=PropertyChanged}"
-                                materialDesign:HintAssist.Hint="Nome da Molécula"
-                                Margin="0,0,0,16"/>
-
-                        <Border Background="{DynamicResource MaterialDesign.Brush.Primary}" 
-                              CornerRadius="4" Padding="12" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Fórmula Molecular" FontSize="12" Opacity="0.9" 
-                                         Foreground="White"/>
-                                <TextBlock Text="{Binding MolecularFormula}" FontSize="20" FontWeight="Bold"
-                                         Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Grid Margin="0,8">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="💡 Modo Didático" 
+                                       FontWeight="SemiBold" 
+                                       VerticalAlignment="Center"/>
+                            <ToggleButton Grid.Column="1" 
+                                          IsChecked="{Binding IsEducationalMode}"
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                        </Grid>
+                        <TextBlock Text="{Binding EducationalMessage}" 
+                                   TextWrapping="Wrap" 
+                                   Margin="0,8,0,0"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                   Visibility="{Binding IsEducationalMode, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Seleção de Elemento -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
+                    <StackPanel>
+                        <TextBlock Text="⚛️ Selecionar Elemento" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,8"/>
+                        
+                        <ItemsControl ItemsSource="{Binding AvailableElements}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton Width="50" Height="50" 
+                                                 Margin="2"
+                                                 GroupName="ElementSelection"
+                                                 IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                 Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                                 ToolTip="{Binding Name}"
+                                                 Command="{Binding DataContext.SelectElementCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 CommandParameter="{Binding}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Symbol}" 
+                                                       FontWeight="Bold" 
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding AtomicNumber}" 
+                                                       FontSize="8"
+                                                       Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                                       Opacity="0.7"
+                                                       HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{Binding SelectedElement.Name}" 
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"
+                                   Visibility="{Binding SelectedElement, Converter={StaticResource NullToVisibilityConverter}}"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Tipo de Ligação -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
+                    <StackPanel>
+                        <TextBlock Text="🔗 Tipo de Ligação" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,8"/>
+                        
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+                            <RadioButton Content="⚊ Ligação Simples" 
+                                         Tag="Single"
+                                         Checked="BondType_Checked"
+                                         IsChecked="True"
+                                         GroupName="BondType"
+                                         Margin="4"/>
+                            <RadioButton Content="⚌ Ligação Dupla" 
+                                         Tag="Double"
+                                         Checked="BondType_Checked"
+                                         GroupName="BondType"
+                                         Margin="4"/>
+                            <RadioButton Content="≡ Ligação Tripla" 
+                                         Tag="Triple"
+                                         Checked="BondType_Checked"
+                                         GroupName="BondType"
+                                         Margin="4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Templates de Moléculas -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
+                    <StackPanel>
+                        <TextBlock Text="📚 Templates" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,8"/>
+                        
+                        <ListBox ItemsSource="{Binding MoleculeTemplates}"
+                                 SelectedItem="{Binding SelectedTemplate}"
+                                 MaxHeight="200">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="4">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Description}" 
+                                                   FontSize="10" 
+                                                   Opacity="0.7"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Button Content="Carregar Template" 
+                                Command="{Binding LoadTemplateCommand}"
+                                CommandParameter="{Binding SelectedTemplate}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Margin="0,8,0,0"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Ações Rápidas -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
+                    <StackPanel>
+                        <TextBlock Text="⚡ Ações Rápidas" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,8"/>
+                        
+                        <Button Content="🔄 Desfazer (Ctrl+Z)" 
+                                Command="{Binding UndoCommand}"
+                                IsEnabled="{Binding CanUndo}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,4"/>
+                        <Button Content="🔃 Refazer (Ctrl+Y)" 
+                                Command="{Binding RedoCommand}"
+                                IsEnabled="{Binding CanRedo}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,4"/>
+                        <Button Content="🗑️ Limpar Tudo" 
+                                Command="{Binding ClearMoleculeCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,4"/>
+                        <Button Content="❓ Tutorial (F1)" 
+                                Command="{Binding ShowTutorialCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,4"/>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ========================================== -->
+        <!-- ÁREA CENTRAL: CANVAS 2D/3D -->
+        <!-- ========================================== -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Toolbar Superior -->
+            <materialDesign:Card Grid.Row="0" Margin="4">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="8">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Salvar Molécula (Ctrl+S)"
+                            Command="{Binding SaveMoleculeCommand}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="ContentSave" Width="24" Height="24"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Exportar"
+                            Command="{Binding ExportCommand}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="Export" Width="24" Height="24"/>
+                    </Button>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="8,0"/>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Zoom In"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="MagnifyPlus" Width="24" Height="24"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Zoom Out"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="MagnifyMinus" Width="24" Height="24"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Reset Zoom"
+                            Command="{Binding ResetZoomCommand}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="Refresh" Width="24" Height="24"/>
+                    </Button>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="8,0"/>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Otimizar Geometria 3D"
+                            Command="{Binding OptimizeGeometryCommand}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="AutoFix" Width="24" Height="24"/>
+                    </Button>
+                    <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                                  IsChecked="{Binding Show3DView}"
+                                  ToolTip="Alternar Vista 2D/3D"
+                                  Margin="4">
+                        <materialDesign:PackIcon Kind="Rotate3D" Width="24" Height="24"/>
+                    </ToggleButton>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Canvas 2D -->
+            <Border Grid.Row="1" 
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.TextBox.Border}" 
+                    BorderThickness="1"
+                    Background="White"
+                    Margin="4"
+                    CornerRadius="4">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Show3DView}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Canvas x:Name="MoleculeCanvas" 
+                        Background="White"
+                        MouseLeftButtonDown="Canvas_MouseLeftButtonDown">
+                    
+                    <!-- Renderização de átomos e ligações será feita no code-behind -->
+                    
+                </Canvas>
+            </Border>
+
+            <!-- Visualizador 3D (Helix Toolkit) -->
+            <Border Grid.Row="1" 
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.TextBox.Border}" 
+                    BorderThickness="1"
+                    Background="#F5F5F5"
+                    Margin="4"
+                    CornerRadius="4"
+                    Visibility="{Binding Show3DView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid>
+                    <helix:HelixViewport3D x:Name="Viewport3D" 
+                                           Background="#F5F5F5"
+                                           ShowCoordinateSystem="True"
+                                           ShowViewCube="True"
+                                           ZoomExtentsWhenLoaded="True"
+                                           CameraRotationMode="Turntable"
+                                           CameraMode="Inspect"
+                                           MouseDown="Viewport3D_MouseDown">
+                        <helix:DefaultLights/>
+                        
+                        <!-- Câmera -->
+                        <helix:HelixViewport3D.Camera>
+                            <PerspectiveCamera Position="10,10,10" 
+                                               LookDirection="-10,-10,-10" 
+                                               UpDirection="0,1,0"
+                                               FieldOfView="45"/>
+                        </helix:HelixViewport3D.Camera>
+
+                        <!-- Modelos 3D serão adicionados dinamicamente -->
+                        
+                    </helix:HelixViewport3D>
+
+                    <!-- Painel de Controles 3D -->
+                    <StackPanel HorizontalAlignment="Right" 
+                                VerticalAlignment="Top" 
+                                Margin="16"
+                                Background="#CC000000"
+                                Opacity="0.9">
+                        <TextBlock Text="🎨 Controles 3D" 
+                                   FontSize="12" 
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   Margin="8,8,8,4"/>
+                        
+                        <!-- Estilo de Visualização -->
+                        <ComboBox x:Name="ViewStyleCombo"
+                                  Margin="8,4"
+                                  Width="150"
+                                  SelectionChanged="ViewStyle_Changed"
+                                  materialDesign:HintAssist.Hint="Estilo"
+                                  Style="{StaticResource MaterialDesignFilledComboBox}">
+                            <ComboBoxItem Content="⚛️ Ball and Stick" IsSelected="True" Tag="BallAndStick"/>
+                            <ComboBoxItem Content="🔮 Space Filling" Tag="SpaceFilling"/>
+                            <ComboBoxItem Content="📏 Wireframe" Tag="Wireframe"/>
+                            <ComboBoxItem Content="🎯 CPK Colors" Tag="CPK"/>
+                        </ComboBox>
+                        
+                        <!-- Tamanho dos Átomos -->
+                        <StackPanel Margin="8,4">
+                            <TextBlock Text="Tamanho Átomos:" 
+                                       FontSize="10" 
+                                       Foreground="White"
+                                       Margin="0,0,0,2"/>
+                            <Slider x:Name="AtomSizeSlider"
+                                    Minimum="0.2"
+                                    Maximum="2.0"
+                                    Value="0.5"
+                                    Width="150"
+                                    ValueChanged="AtomSize_Changed"
+                                    TickFrequency="0.1"
+                                    IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                        
+                        <!-- Espessura das Ligações -->
+                        <StackPanel Margin="8,4">
+                            <TextBlock Text="Espessura Ligações:" 
+                                       FontSize="10" 
+                                       Foreground="White"
+                                       Margin="0,0,0,2"/>
+                            <Slider x:Name="BondThicknessSlider"
+                                    Minimum="0.05"
+                                    Maximum="0.3"
+                                    Value="0.1"
+                                    Width="150"
+                                    ValueChanged="BondThickness_Changed"
+                                    TickFrequency="0.05"
+                                    IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                        
+                        <!-- Botões de Ação -->
+                        <Button Content="🔄 Auto Rotação"
+                                Click="ToggleAutoRotation"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="White"
+                                BorderBrush="White"
+                                Margin="8,4"
+                                Width="150"/>
+                        
+                        <Button Content="📏 Medir Distância"
+                                Click="MeasureDistance"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="White"
+                                BorderBrush="White"
+                                Margin="8,4"
+                                Width="150"/>
+                        
+                        <Button Content="📐 Medir Ângulo"
+                                Click="MeasureAngle"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="White"
+                                BorderBrush="White"
+                                Margin="8,4"
+                                Width="150"/>
+                        
+                        <Button Content="🎯 Reset Câmera"
+                                Click="ResetCamera"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="White"
+                                BorderBrush="White"
+                                Margin="8,4"
+                                Width="150"/>
+                        
+                        <CheckBox Content="Mostrar Etiquetas"
+                                  x:Name="ShowLabelsCheckbox"
+                                  Foreground="White"
+                                  Margin="8,4"
+                                  Checked="ShowLabels_Changed"
+                                  Unchecked="ShowLabels_Changed"/>
+                    </StackPanel>
+
+                    <!-- Informações de Medição -->
+                    <Border x:Name="MeasurementPanel"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Background="#CC000000"
+                            Padding="12"
+                            Margin="16"
+                            CornerRadius="4"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock x:Name="MeasurementTitle"
+                                       Text="📏 Medição"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock x:Name="MeasurementValue"
+                                       Text="Selecione átomos..."
+                                       FontSize="14"
+                                       Foreground="#FFD700"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Status Bar -->
+            <materialDesign:Card Grid.Row="2" Margin="4">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Atom" 
+                                                 VerticalAlignment="Center" 
+                                                 Margin="0,0,4,0"/>
+                        <TextBlock Text="Átomos: " VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Atoms.Count}" 
+                                   FontWeight="Bold" 
+                                   VerticalAlignment="Center" 
+                                   Margin="0,0,16,0"/>
+                        
+                        <materialDesign:PackIcon Kind="Link" 
+                                                 VerticalAlignment="Center" 
+                                                 Margin="0,0,4,0"/>
+                        <TextBlock Text="Ligações: " VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Bonds.Count}" 
+                                   FontWeight="Bold" 
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="1" 
+                               Text="{Binding ValidationSummary}" 
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"/>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+
+        <!-- ========================================== -->
+        <!-- PAINEL DIREITO: ANÁLISE E VALIDAÇÃO -->
+        <!-- ========================================== -->
+        <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Análise Química -->
+                <materialDesign:Card Style="{StaticResource InfoCard}" Background="{DynamicResource PrimaryHueLightBrush}">
+                    <StackPanel>
+                        <TextBlock Text="📊 Análise Química" 
+                                   FontSize="16" 
+                                   FontWeight="Bold" 
+                                   Margin="0,0,0,12"/>
+
+                        <!-- Fórmula Molecular -->
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
+                            <TextBlock Text="Fórmula:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding MolecularFormula}" 
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
 
-                            <Border Grid.Column="0" Background="#4CAF50" CornerRadius="4" Padding="8" Margin="0,0,4,0">
-                                <StackPanel>
-                                    <TextBlock Text="Massa Molar" FontSize="11" Foreground="White"/>
-                                    <TextBlock Text="{Binding MolarMass, StringFormat=F2}" FontSize="16" 
-                                             FontWeight="Bold" Foreground="White"/>
-                                    <TextBlock Text="g/mol" FontSize="10" Foreground="White" Opacity="0.9"/>
-                                </StackPanel>
-                            </Border>
+                        <!-- Massa Molar -->
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Massa Molar:" FontWeight="SemiBold"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding MolarMass, StringFormat={}{0:F2}}" FontWeight="Bold"/>
+                                <TextBlock Text=" g/mol" Margin="4,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
 
-                            <Border Grid.Column="1" Background="#FF9800" CornerRadius="4" Padding="8" Margin="4,0,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="Carga Total" FontSize="11" Foreground="White"/>
-                                    <TextBlock Text="{Binding TotalCharge}" FontSize="16" FontWeight="Bold" 
-                                             Foreground="White"/>
-                                    <TextBlock Text="e⁻" FontSize="10" Foreground="White" Opacity="0.9"/>
-                                </StackPanel>
-                            </Border>
+                        <!-- Polaridade -->
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Polaridade:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding IsPolar}" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <!-- Geometria -->
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Geometria:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding Geometry}" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <!-- Tipo de Molécula -->
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Tipo:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding MoleculeType}" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Right"/>
                         </Grid>
                     </StackPanel>
+                </materialDesign:Card>
 
-                    <!-- Controles de Adição -->
-                    <Separator Margin="16,8"/>
+                <!-- Validação -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <TextBlock Text="✅ Validação" 
+                                       FontSize="16" 
+                                       FontWeight="Bold"/>
+                            <materialDesign:PackIcon Kind="CheckCircle" 
+                                                     Width="24" Height="24"
+                                                     HorizontalAlignment="Right"
+                                                     Foreground="Green"
+                                                     Visibility="{Binding IsValid, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <materialDesign:PackIcon Kind="AlertCircle" 
+                                                     Width="24" Height="24"
+                                                     HorizontalAlignment="Right"
+                                                     Foreground="Orange"
+                                                     Visibility="{Binding IsValid, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
 
-                    <StackPanel Margin="16">
-                        <TextBlock Text="➕ Adicionar Átomo" FontWeight="Medium" Margin="0,0,0,8"/>
-                        <Button Content="Adicionar Átomo Selecionado" 
-                               Command="{Binding AddAtomCommand}"
-                               Style="{StaticResource MaterialDesignRaisedButton}"
-                               Margin="0,0,0,16"/>
-
-                        <TextBlock Text="🔗 Criar Ligação" FontWeight="Medium" Margin="0,8,0,8"/>
-                        
-                        <TextBlock Text="Átomo 1:" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox ItemsSource="{Binding CurrentAtoms}"
-                                SelectedItem="{Binding SelectedAtom1}"
-                                DisplayMemberPath="Element.Symbol"
-                                Margin="0,0,0,8"/>
-
-                        <TextBlock Text="Átomo 2:" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox ItemsSource="{Binding CurrentAtoms}"
-                                SelectedItem="{Binding SelectedAtom2}"
-                                DisplayMemberPath="Element.Symbol"
-                                Margin="0,0,0,8"/>
-
-                        <TextBlock Text="Tipo de Ligação:" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox SelectedValue="{Binding SelectedBondType}" Margin="0,0,0,8">
-                            <ComboBoxItem Content="Simples" Tag="Single"/>
-                            <ComboBoxItem Content="Dupla" Tag="Double"/>
-                            <ComboBoxItem Content="Tripla" Tag="Triple"/>
-                            <ComboBoxItem Content="Iônica" Tag="Ionic"/>
-                        </ComboBox>
-
-                        <Button Content="Criar Ligação" 
-                               Command="{Binding AddBondCommand}"
-                               Style="{StaticResource MaterialDesignRaisedButton}"
-                               Margin="0,0,0,16"/>
-                    </StackPanel>
-
-                    <!-- Lista de Átomos e Ligações -->
-                    <Separator Margin="16,8"/>
-
-                    <StackPanel Margin="16">
-                        <TextBlock Text="⚛️ Átomos na Molécula" FontWeight="Medium" Margin="0,0,0,8"/>
-                        <ListBox ItemsSource="{Binding CurrentAtoms}" MaxHeight="150"
-                                Margin="0,0,0,8">
+                        <ListBox ItemsSource="{Binding ValidationWarnings}"
+                                 MaxHeight="200"
+                                 Visibility="{Binding ValidationWarnings.Count, Converter={StaticResource CountToVisibilityConverter}}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0">
-                                            <Run Text="{Binding Element.Symbol}" FontWeight="Bold"/>
-                                            <Run Text=" - "/>
-                                            <Run Text="{Binding Element.Name}"/>
-                                        </TextBlock>
-                                        <Button Grid.Column="1" Content="✖" 
-                                               Command="{Binding DataContext.RemoveAtomCommand, 
-                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                               CommandParameter="{Binding}"
-                                               Style="{StaticResource MaterialDesignFlatButton}"
-                                               Foreground="Red" Padding="4"/>
-                                    </Grid>
+                                    <Border Padding="8" 
+                                            Margin="2"
+                                            CornerRadius="4"
+                                            Background="{Binding Severity, Converter={StaticResource SeverityToColorConverter}}">
+                                        <TextBlock Text="{Binding Message}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="11"/>
+                                    </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <TextBlock Text="🔗 Ligações" FontWeight="Medium" Margin="0,8,0,8"/>
-                        <ListBox ItemsSource="{Binding CurrentBonds}" MaxHeight="100">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0">
-                                            <Run Text="{Binding Atom1.Element.Symbol}"/>
-                                            <Run Text=" ─ "/>
-                                            <Run Text="{Binding Atom2.Element.Symbol}"/>
-                                            <Run Text=" ("/>
-                                            <Run Text="{Binding Type}"/>
-                                            <Run Text=")"/>
-                                        </TextBlock>
-                                        <Button Grid.Column="1" Content="✖" 
-                                               Command="{Binding DataContext.RemoveBondCommand, 
-                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                               CommandParameter="{Binding}"
-                                               Style="{StaticResource MaterialDesignFlatButton}"
-                                               Foreground="Red" Padding="4"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <TextBlock Text="Nenhum aviso ou erro." 
+                                   FontStyle="Italic"
+                                   Opacity="0.6"
+                                   Margin="0,8"
+                                   Visibility="{Binding ValidationWarnings.Count, Converter={StaticResource CountToVisibilityConverter}}"/>
+
+                        <Button Content="🔍 Validar Agora" 
+                                Command="{Binding ValidateMoleculeCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="0,8,0,0"/>
                     </StackPanel>
+                </materialDesign:Card>
 
-                    <!-- Ações -->
-                    <Separator Margin="16,8"/>
+                <!-- Informações do Átomo Selecionado -->
+                <materialDesign:Card Style="{StaticResource InfoCard}"
+                                     Visibility="{Binding SelectedAtom, Converter={StaticResource NullToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="📍 Átomo Selecionado" 
+                                   FontSize="16" 
+                                   FontWeight="Bold" 
+                                   Margin="0,0,0,12"/>
 
-                    <StackPanel Margin="16">
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Elemento:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding SelectedAtom.Element.Name}" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Símbolo:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding SelectedAtom.Element.Symbol}" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <Button Content="🗑️ Remover Átomo" 
+                                Command="{Binding RemoveAtomCommand}"
+                                CommandParameter="{Binding SelectedAtom}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,8,0,0"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Salvar e Exportar -->
+                <materialDesign:Card Style="{StaticResource InfoCard}">
+                    <StackPanel>
+                        <TextBlock Text="💾 Salvar e Exportar" 
+                                   FontSize="16" 
+                                   FontWeight="Bold" 
+                                   Margin="0,0,0,12"/>
+
                         <Button Content="💾 Salvar Molécula" 
-                               Command="{Binding SaveMoleculeCommand}"
-                               Style="{StaticResource MaterialDesignRaisedButton}"
-                               Background="#4CAF50"
-                               Margin="0,0,0,8"/>
+                                Command="{Binding SaveMoleculeCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="{DynamicResource PrimaryHueMidBrush}"
+                                Margin="0,4"/>
                         
-                        <Button Content="🗑️ Limpar Tudo" 
-                               Command="{Binding ClearMoleculeCommand}"
-                               Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="📦 Salvar como Template" 
+                                Command="{Binding SaveAsTemplateCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,4"/>
+                        
+                        <Button Content="📤 Exportar" 
+                                Command="{Binding ExportCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,4"/>
                     </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </materialDesign:Card>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

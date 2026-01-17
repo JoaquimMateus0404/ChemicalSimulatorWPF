@@ -1,217 +1,29 @@
 <UserControl x:Class="ChemicalSimulator.Views.ReactionSimulatorView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             Background="{DynamicResource MaterialDesign.Brush.Background}">
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:conv="clr-namespace:ChemicalSimulator.Converters"
+			 xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+			 xmlns:oxy="http://oxyplot.org/wpf"
+			 xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+			 xmlns:models="clr-namespace:ChemicalSimulator.Models"
+			 xmlns:diag="clr-namespace:System.Diagnostics;assembly=System.Runtime"
+			 mc:Ignorable="d"
+			 d:DesignHeight="720"
+			 d:DesignWidth="1200">
 
-    <Grid Margin="16">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="400"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="350"/>
-        </Grid.ColumnDefinitions>
+	<UserControl.Resources>
+		
+	</UserControl.Resources>
 
-        <!-- Painel Esquerdo: Reagentes -->
-        <materialDesign:Card Grid.Column="0" Margin="0,0,8,0">
-            <StackPanel>
-                <Border Background="{DynamicResource MaterialDesign.Brush.Primary}" Padding="16">
-                    <TextBlock Text="⚗️ Reagentes" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                </Border>
+	<Grid Background="{StaticResource BackgroundBrush}">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
 
-                <ScrollViewer MaxHeight="300" Margin="16">
-                    <ListBox ItemsSource="{Binding Reactants}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Coefficient}" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Molecule.Formula}"/>
-                                    <Button Grid.Column="2" Content="✖" 
-                                           Command="{Binding DataContext.RemoveReactantCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           CommandParameter="{Binding}"
-                                           Style="{StaticResource MaterialDesignFlatButton}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </ScrollViewer>
-
-                <Separator Margin="16,8"/>
-
-                <StackPanel Margin="16">
-                    <TextBlock Text="Adicionar Molécula" FontWeight="Medium" Margin="0,0,0,8"/>
-                    <ComboBox ItemsSource="{Binding AvailableMolecules}"
-                             DisplayMemberPath="Name" Margin="0,0,0,8"/>
-                    <Button Content="Adicionar Reagente" 
-                           Command="{Binding AddReactantCommand}"
-                           Style="{StaticResource MaterialDesignRaisedButton}"/>
-                </StackPanel>
-
-                <Separator Margin="16,8"/>
-
-                <!-- Condições -->
-                <StackPanel Margin="16">
-                    <TextBlock Text="🌡️ Condições da Reação" FontWeight="Bold" Margin="0,0,0,12"/>
-                    
-                    <TextBlock Text="Temperatura (°C)" Margin="0,0,0,4"/>
-                    <Slider Value="{Binding Temperature}" Minimum="0" Maximum="500" 
-                           TickFrequency="10" IsSnapToTickEnabled="True"/>
-                    <TextBlock Text="{Binding TemperatureCelsius, StringFormat=F1}" HorizontalAlignment="Center"/>
-
-                    <TextBlock Text="Pressão (kPa)" Margin="0,12,0,4"/>
-                    <Slider Value="{Binding Pressure}" Minimum="50" Maximum="500" 
-                           TickFrequency="10" IsSnapToTickEnabled="True"/>
-                    <TextBlock Text="{Binding Pressure, StringFormat=F1}" HorizontalAlignment="Center"/>
-
-                    <TextBlock Text="pH" Margin="0,12,0,4"/>
-                    <Slider Value="{Binding pH}" Minimum="0" Maximum="14" 
-                           TickFrequency="0.5" IsSnapToTickEnabled="True"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="{Binding pH, StringFormat=F1}" FontWeight="Bold"/>
-                        <TextBlock Text=" - " Margin="4,0"/>
-                        <TextBlock Text="{Binding EnvironmentType}"/>
-                    </StackPanel>
-                </StackPanel>
-            </StackPanel>
-        </materialDesign:Card>
-
-        <!-- Painel Central: Simulação -->
-        <materialDesign:Card Grid.Column="1" Margin="4,0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="0" Background="{DynamicResource MaterialDesign.Brush.Primary}" Padding="16">
-                    <TextBlock Text="🎬 Simulação da Reação" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                </Border>
-
-                <!-- Equação Química -->
-                <Border Grid.Row="1" Background="#F5F5F5" Padding="20" Margin="16">
-                    <TextBlock Text="{Binding ReactionEquation}" FontSize="24" FontFamily="Cambria Math"
-                             HorizontalAlignment="Center" TextWrapping="Wrap"/>
-                </Border>
-
-                <!-- Passos da Simulação -->
-                <ScrollViewer Grid.Row="2" Margin="16" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding SimulationSteps}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}" Margin="0,4" FontFamily="Consolas"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-
-                <!-- Controles -->
-                <Border Grid.Row="3" Padding="16">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="🔮 Prever Produtos" 
-                               Command="{Binding PredictProductsCommand}"
-                               Style="{StaticResource MaterialDesignRaisedButton}"
-                               Background="#2196F3"
-                               Margin="0,0,8,0"/>
-                        <Button Content="▶️ Executar Simulação" 
-                               Command="{Binding RunSimulationCommand}"
-                               Style="{StaticResource MaterialDesignRaisedButton}"
-                               Background="#4CAF50"
-                               Margin="0,0,8,0"/>
-                        <Button Content="⚖️ Balancear" 
-                               Command="{Binding BalanceEquationCommand}"
-                               Style="{StaticResource MaterialDesignOutlinedButton}"
-                               Margin="0,0,8,0"/>
-                        <ProgressBar Value="{Binding SimulationProgress}" Minimum="0" Maximum="100"
-                                    Width="100" Height="20" Visibility="{Binding IsSimulating, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </materialDesign:Card>
-
-        <!-- Painel Direito: Produtos e Resultados -->
-        <materialDesign:Card Grid.Column="2" Margin="8,0,0,0">
-            <ScrollViewer>
-                <StackPanel>
-                    <Border Background="{DynamicResource MaterialDesign.Brush.Primary}" Padding="16">
-                        <TextBlock Text="✨ Produtos" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                    </Border>
-
-                    <ListBox ItemsSource="{Binding Products}" Margin="16" MaxHeight="200">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock FontWeight="Bold">
-                                        <Run Text="{Binding Coefficient}"/>
-                                        <Run Text="{Binding Molecule.Formula}"/>
-                                    </TextBlock>
-                                    <TextBlock Text="{Binding Molecule.Name}" FontSize="11" Opacity="0.7"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <Separator Margin="16,8"/>
-
-                    <!-- Termodinâmica -->
-                    <StackPanel Margin="16">
-                        <TextBlock Text="📊 Propriedades Termodinâmicas" FontWeight="Bold" Margin="0,0,0,12"/>
-                        
-                        <Border Background="#FF5722" CornerRadius="4" Padding="12" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Variação de Entalpia (ΔH)" FontSize="11" Foreground="White"/>
-                                <TextBlock Text="{Binding CurrentReaction.EnthalpyChange, StringFormat=F2}" 
-                                         FontSize="20" FontWeight="Bold" Foreground="White"/>
-                                <TextBlock Text="kJ/mol" FontSize="10" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="#9C27B0" CornerRadius="4" Padding="12" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Energia Livre de Gibbs (ΔG)" FontSize="11" Foreground="White"/>
-                                <TextBlock Text="{Binding CurrentReaction.GibbsFreeEnergy, StringFormat=F2}" 
-                                         FontSize="20" FontWeight="Bold" Foreground="White"/>
-                                <TextBlock Text="kJ/mol" FontSize="10" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Grid Margin="0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-
-                            <Border Grid.Column="0" Background="#4CAF50" CornerRadius="4" Padding="8" Margin="0,0,4,0">
-                                <StackPanel>
-                                    <TextBlock Text="Tipo" FontSize="10" Foreground="White"/>
-                                    <TextBlock Text="{Binding CurrentReaction.IsExothermic}" FontSize="14" 
-                                             FontWeight="Bold" Foreground="White"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="1" Background="#2196F3" CornerRadius="4" Padding="8" Margin="4,0,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="Espontânea" FontSize="10" Foreground="White"/>
-                                    <TextBlock Text="{Binding CurrentReaction.IsSpontaneous}" FontSize="14" 
-                                             FontWeight="Bold" Foreground="White"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </StackPanel>
-
-                    <Separator Margin="16,8"/>
-
-                    <Button Content="💾 Exportar Reação" 
-                           Command="{Binding ExportReactionCommand}"
-                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                           Margin="16"/>
-                </StackPanel>
-            </ScrollViewer>
-        </materialDesign:Card>
-    </Grid>
+		
+	</Grid>
 </UserControl>

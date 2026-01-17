@@ -9,15 +9,45 @@ namespace ChemicalSimulator.Views
         public EducationalView()
         {
             InitializeComponent();
+            
+            // Habilitar navegação por teclado
+            this.KeyDown += EducationalView_KeyDown;
+            this.Focusable = true;
+            this.Loaded += (s, e) => this.Focus();
         }
 
-        private void TopicItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void EducationalView_KeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is ListBoxItem item && item.Content is LessonTopic topic)
+            // TODO: Criar EducationalViewModel
+            /*
+            if (DataContext is not EducationalViewModel viewModel) return;
+
+            switch (e.Key)
             {
-                var viewModel = (EducationalViewModel)DataContext;
-                viewModel.SelectTopicCommand.Execute(topic);
+                case Key.Right:
+                case Key.PageDown:
+                    if (viewModel.NextStepCommand.CanExecute(null))
+                    {
+                        viewModel.NextStepCommand.Execute(null);
+                        e.Handled = true;
+                    }
+                    break;
+
+                case Key.Left:
+                case Key.PageUp:
+                    if (viewModel.PreviousStepCommand.CanExecute(null))
+                    {
+                        viewModel.PreviousStepCommand.Execute(null);
+                        e.Handled = true;
+                    }
+                    break;
+
+                case Key.Home:
+                    viewModel.ResetProgressCommand.Execute(null);
+                    e.Handled = true;
+                    break;
             }
+            */
         }
     }
 }

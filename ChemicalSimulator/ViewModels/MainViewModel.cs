@@ -11,16 +11,17 @@ namespace ChemicalSimulator.ViewModels
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
-        private ViewModelBase _currentView;
+        private ViewModelBase? _currentView;
         private string _currentViewName = "Construtor de Moléculas";
 
         private readonly ElementDataLoader _elementLoader;
+        private readonly CompoundDataLoader _compoundLoader;
         private readonly ChemistryEngine _chemistryEngine;
 
         public ObservableCollection<Element> AvailableElements { get; }
         public ObservableCollection<Molecule> SavedMolecules { get; }
 
-        public ViewModelBase CurrentView
+        public ViewModelBase? CurrentView
         {
             get => _currentView;
             set => SetProperty(ref _currentView, value);
@@ -42,6 +43,7 @@ namespace ChemicalSimulator.ViewModels
         public MainViewModel()
         {
             _elementLoader = new ElementDataLoader();
+            _compoundLoader = new CompoundDataLoader();
             _chemistryEngine = new ChemistryEngine();
 
             AvailableElements = new ObservableCollection<Element>();
@@ -98,19 +100,19 @@ namespace ChemicalSimulator.ViewModels
 
         private void NavigateToMoleculeBuilder()
         {
-            CurrentView = new MoleculeBuilderViewModel(AvailableElements, SavedMolecules);
+            CurrentView = new MoleculeBuilderViewModel(_chemistryEngine, _elementLoader, _compoundLoader);
             CurrentViewName = "🔬 Construtor de Moléculas";
         }
 
         private void NavigateToReactionSimulator()
         {
-            CurrentView = new ReactionSimulatorViewModel(SavedMolecules);
+            CurrentView = new ReactionSimulatorViewModel();
             CurrentViewName = "⚗️ Simulador de Reações";
         }
 
         private void NavigateToEducationalMode()
         {
-            CurrentView = new EducationalViewModel();
+            //CurrentView = new EducationalViewModel();
             CurrentViewName = "📚 Modo Educacional";
         }
 
