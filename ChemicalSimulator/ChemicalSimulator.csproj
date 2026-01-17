@@ -34,4 +34,17 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <!-- Copiar arquivos de dados para o diretório de saída -->
+  <ItemGroup>
+    <None Update="Resources\Data\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Alternativamente, incluir como recursos embarcados -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Data\ElementsData.json" />
+    <EmbeddedResource Include="Resources\Data\CommonCompoundsData.json" />
+  </ItemGroup>
+
 </Project>

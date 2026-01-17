@@ -15,14 +15,16 @@ namespace ChemicalSimulator.Converters
             {
                 return category switch
                 {
-                    Models.ElementCategory.NonMetal => new SolidColorBrush(Color.FromRgb(255, 228, 181)),
-                    Models.ElementCategory.NobleGas => new SolidColorBrush(Color.FromRgb(192, 255, 255)),
-                    Models.ElementCategory.AlkaliMetal => new SolidColorBrush(Color.FromRgb(255, 107, 107)),
-                    Models.ElementCategory.AlkalineEarthMetal => new SolidColorBrush(Color.FromRgb(255, 217, 61)),
-                    Models.ElementCategory.TransitionMetal => new SolidColorBrush(Color.FromRgb(255, 192, 203)),
-                    Models.ElementCategory.PostTransitionMetal => new SolidColorBrush(Color.FromRgb(221, 221, 221)),
-                    Models.ElementCategory.Metalloid => new SolidColorBrush(Color.FromRgb(204, 204, 153)),
-                    Models.ElementCategory.Halogen => new SolidColorBrush(Color.FromRgb(255, 255, 153)),
+                    Models.ElementCategory.NonMetal => new SolidColorBrush(Color.FromRgb(144, 238, 144)), // Verde claro
+                    Models.ElementCategory.NobleGas => new SolidColorBrush(Color.FromRgb(135, 206, 250)), // Azul céu
+                    Models.ElementCategory.AlkaliMetal => new SolidColorBrush(Color.FromRgb(255, 140, 140)), // Vermelho claro
+                    Models.ElementCategory.AlkalineEarthMetal => new SolidColorBrush(Color.FromRgb(255, 218, 101)), // Amarelo dourado
+                    Models.ElementCategory.TransitionMetal => new SolidColorBrush(Color.FromRgb(255, 182, 193)), // Rosa claro
+                    Models.ElementCategory.PostTransitionMetal => new SolidColorBrush(Color.FromRgb(176, 196, 222)), // Azul aço claro
+                    Models.ElementCategory.Metalloid => new SolidColorBrush(Color.FromRgb(238, 232, 170)), // Amarelo pálido
+                    Models.ElementCategory.Halogen => new SolidColorBrush(Color.FromRgb(221, 160, 221)), // Lavanda
+                    Models.ElementCategory.Lanthanide => new SolidColorBrush(Color.FromRgb(255, 192, 203)), // Rosa
+                    Models.ElementCategory.Actinide => new SolidColorBrush(Color.FromRgb(233, 150, 122)), // Salmão
                     _ => new SolidColorBrush(Colors.LightGray)
                 };
             }

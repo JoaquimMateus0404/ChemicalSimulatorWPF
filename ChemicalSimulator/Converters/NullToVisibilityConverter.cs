@@ -14,7 +14,15 @@ namespace ChemicalSimulator.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value == null ? NullVisibility : NotNullVisibility;
+            // Verificar se é nulo
+            if (value == null)
+                return NullVisibility;
+            
+            // Verificar se é string vazia
+            if (value is string str && string.IsNullOrWhiteSpace(str))
+                return NullVisibility;
+            
+            return NotNullVisibility;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -1,0 +1,364 @@
+{
+  "compounds": [
+    {
+      "name": "Água",
+      "formula": "H2O",
+      "molarMass": 18.015,
+      "state": "Liquid",
+      "boilingPoint": 373.15,
+      "meltingPoint": 273.15,
+      "commonUse": "Solvente universal"
+    },
+    {
+      "name": "Dióxido de Carbono",
+      "formula": "CO2",
+      "molarMass": 44.01,
+      "state": "Gas",
+      "boilingPoint": 194.65,
+      "meltingPoint": 216.58,
+      "commonUse": "Refrigerantes, extintor de incêndios"
+    },
+    {
+      "name": "Cloreto de Sódio",
+      "formula": "NaCl",
+      "molarMass": 58.44,
+      "state": "Solid",
+      "boilingPoint": 1738.15,
+      "meltingPoint": 1074.15,
+      "commonUse": "Sal de cozinha"
+    },
+    {
+      "name": "Amônia",
+      "formula": "NH3",
+      "molarMass": 17.03,
+      "state": "Gas",
+      "boilingPoint": 239.81,
+      "meltingPoint": 195.42,
+      "commonUse": "Fertilizantes, produtos de limpeza"
+    },
+    {
+      "name": "Metano",
+      "formula": "CH4",
+      "molarMass": 16.04,
+      "state": "Gas",
+      "boilingPoint": 111.65,
+      "meltingPoint": 90.65,
+      "commonUse": "Gás natural, combustível"
+    },
+    {
+      "name": "Ácido Sulfúrico",
+      "formula": "H2SO4",
+      "molarMass": 98.08,
+      "state": "Liquid",
+      "boilingPoint": 610.15,
+      "meltingPoint": 283.46,
+      "commonUse": "Baterias, indústria química"
+    },
+    {
+      "name": "Hidróxido de Sódio",
+      "formula": "NaOH",
+      "molarMass": 40.00,
+      "state": "Solid",
+      "boilingPoint": 1661.15,
+      "meltingPoint": 596.15,
+      "commonUse": "Soda cáustica, limpeza"
+    },
+    {
+      "name": "Glicose",
+      "formula": "C6H12O6",
+      "molarMass": 180.16,
+      "state": "Solid",
+      "boilingPoint": 673.15,
+      "meltingPoint": 419.15,
+      "commonUse": "Açúcar do sangue, energia"
+    },
+    {
+      "name": "Etanol",
+      "formula": "C2H5OH",
+      "molarMass": 46.07,
+      "state": "Liquid",
+      "boilingPoint": 351.45,
+      "meltingPoint": 159.05,
+      "commonUse": "Álcool, combustível"
+    },
+    {
+      "name": "Ácido Acético",
+      "formula": "CH3COOH",
+      "molarMass": 60.05,
+      "state": "Liquid",
+      "boilingPoint": 391.15,
+      "meltingPoint": 289.75,
+      "commonUse": "Vinagre"
+    },
+    {
+      "name": "Carbonato de Cálcio",
+      "formula": "CaCO3",
+      "molarMass": 100.09,
+      "state": "Solid",
+      "boilingPoint": 1172.15,
+      "meltingPoint": 1612.15,
+      "commonUse": "Calcário, antiácido"
+    },
+    {
+      "name": "Óxido de Ferro III",
+      "formula": "Fe2O3",
+      "molarMass": 159.69,
+      "state": "Solid",
+      "boilingPoint": 3134.15,
+      "meltingPoint": 1838.15,
+      "commonUse": "Ferrugem, pigmentos"
+    },
+    {
+      "name": "Propano",
+      "formula": "C3H8",
+      "molarMass": 44.10,
+      "state": "Gas",
+      "boilingPoint": 231.15,
+      "meltingPoint": 85.45,
+      "commonUse": "Gás de cozinha, aquecimento"
+    },
+    {
+      "name": "Bicarbonato de Sódio",
+      "formula": "NaHCO3",
+      "molarMass": 84.01,
+      "state": "Solid",
+      "boilingPoint": 323.15,
+      "meltingPoint": 543.15,
+      "commonUse": "Fermento químico"
+    },
+    {
+      "name": "Peróxido de Hidrogênio",
+      "formula": "H2O2",
+      "molarMass": 34.01,
+      "state": "Liquid",
+      "boilingPoint": 423.35,
+      "meltingPoint": 272.75,
+      "commonUse": "Água oxigenada, desinfetante"
+    },
+    {
+      "name": "Ácido Clorídrico",
+      "formula": "HCl",
+      "molarMass": 36.46,
+      "state": "Gas",
+      "boilingPoint": 188.15,
+      "meltingPoint": 158.15,
+      "commonUse": "Ácido muriático, limpeza"
+    },
+    {
+      "name": "Acetona",
+      "formula": "C3H6O",
+      "molarMass": 58.08,
+      "state": "Liquid",
+      "boilingPoint": 329.15,
+      "meltingPoint": 178.15,
+      "commonUse": "Removedor de esmalte"
+    },
+    {
+      "name": "Benzeno",
+      "formula": "C6H6",
+      "molarMass": 78.11,
+      "state": "Liquid",
+      "boilingPoint": 353.25,
+      "meltingPoint": 278.65,
+      "commonUse": "Solvente industrial"
+    },
+    {
+      "name": "Nitrato de Amônio",
+      "formula": "NH4NO3",
+      "molarMass": 80.04,
+      "state": "Solid",
+      "boilingPoint": 483.15,
+      "meltingPoint": 442.75,
+      "commonUse": "Fertilizante, explosivo"
+    },
+    {
+      "name": "Sulfato de Cobre II",
+      "formula": "CuSO4",
+      "molarMass": 159.61,
+      "state": "Solid",
+      "boilingPoint": 923.15,
+      "meltingPoint": 383.15,
+      "commonUse": "Algicida, fungicida"
+    },
+    {
+      "name": "Ácido Nítrico",
+      "formula": "HNO3",
+      "molarMass": 63.01,
+      "state": "Liquid",
+      "boilingPoint": 356.15,
+      "meltingPoint": 231.55,
+      "commonUse": "Fertilizantes, explosivos"
+    },
+    {
+      "name": "Cloreto de Potássio",
+      "formula": "KCl",
+      "molarMass": 74.55,
+      "state": "Solid",
+      "boilingPoint": 1693.15,
+      "meltingPoint": 1044.15,
+      "commonUse": "Fertilizante, suplemento"
+    },
+    {
+      "name": "Óxido de Cálcio",
+      "formula": "CaO",
+      "molarMass": 56.08,
+      "state": "Solid",
+      "boilingPoint": 3123.15,
+      "meltingPoint": 2886.15,
+      "commonUse": "Cal virgem, construção"
+    },
+    {
+      "name": "Sulfato de Magnésio",
+      "formula": "MgSO4",
+      "molarMass": 120.37,
+      "state": "Solid",
+      "boilingPoint": 1397.15,
+      "meltingPoint": 1397.15,
+      "commonUse": "Sal de Epsom, laxante"
+    },
+    {
+      "name": "Ácido Fosfórico",
+      "formula": "H3PO4",
+      "molarMass": 97.99,
+      "state": "Liquid",
+      "boilingPoint": 431.15,
+      "meltingPoint": 315.55,
+      "commonUse": "Refrigerantes, fertilizantes"
+    },
+    {
+      "name": "Hidróxido de Cálcio",
+      "formula": "Ca(OH)2",
+      "molarMass": 74.09,
+      "state": "Solid",
+      "boilingPoint": 2079.15,
+      "meltingPoint": 853.15,
+      "commonUse": "Cal hidratada, tratamento de água"
+    },
+    {
+      "name": "Butano",
+      "formula": "C4H10",
+      "molarMass": 58.12,
+      "state": "Gas",
+      "boilingPoint": 272.65,
+      "meltingPoint": 134.85,
+      "commonUse": "Isqueiros, combustível"
+    },
+    {
+      "name": "Óxido de Magnésio",
+      "formula": "MgO",
+      "molarMass": 40.30,
+      "state": "Solid",
+      "boilingPoint": 3873.15,
+      "meltingPoint": 3125.15,
+      "commonUse": "Refratário, antiácido"
+    },
+    {
+      "name": "Cloreto de Cálcio",
+      "formula": "CaCl2",
+      "molarMass": 110.98,
+      "state": "Solid",
+      "boilingPoint": 1908.15,
+      "meltingPoint": 1045.15,
+      "commonUse": "Degelo de estradas, dessecante"
+    },
+    {
+      "name": "Formaldeído",
+      "formula": "CH2O",
+      "molarMass": 30.03,
+      "state": "Gas",
+      "boilingPoint": 252.15,
+      "meltingPoint": 181.15,
+      "commonUse": "Conservante, desinfetante"
+    },
+    {
+      "name": "Sacarose",
+      "formula": "C12H22O11",
+      "molarMass": 342.30,
+      "state": "Solid",
+      "boilingPoint": 459.15,
+      "meltingPoint": 459.15,
+      "commonUse": "Açúcar de mesa"
+    },
+    {
+      "name": "Óxido Nítrico",
+      "formula": "NO",
+      "molarMass": 30.01,
+      "state": "Gas",
+      "boilingPoint": 121.38,
+      "meltingPoint": 109.50,
+      "commonUse": "Sinalizador celular, poluente"
+    },
+    {
+      "name": "Dióxido de Enxofre",
+      "formula": "SO2",
+      "molarMass": 64.06,
+      "state": "Gas",
+      "boilingPoint": 263.15,
+      "meltingPoint": 200.15,
+      "commonUse": "Conservante, branqueador"
+    },
+    {
+      "name": "Cloreto de Amônio",
+      "formula": "NH4Cl",
+      "molarMass": 53.49,
+      "state": "Solid",
+      "boilingPoint": 793.15,
+      "meltingPoint": 613.15,
+      "commonUse": "Fertilizante, flux de solda"
+    },
+    {
+      "name": "Metanol",
+      "formula": "CH3OH",
+      "molarMass": 32.04,
+      "state": "Liquid",
+      "boilingPoint": 337.85,
+      "meltingPoint": 175.65,
+      "commonUse": "Solvente, combustível"
+    },
+    {
+      "name": "Óxido de Alumínio",
+      "formula": "Al2O3",
+      "molarMass": 101.96,
+      "state": "Solid",
+      "boilingPoint": 3253.15,
+      "meltingPoint": 2345.15,
+      "commonUse": "Abrasivo, cerâmica"
+    },
+    {
+      "name": "Sulfato de Amônio",
+      "formula": "(NH4)2SO4",
+      "molarMass": 132.14,
+      "state": "Solid",
+      "boilingPoint": 508.15,
+      "meltingPoint": 508.15,
+      "commonUse": "Fertilizante nitrogenado"
+    },
+    {
+      "name": "Ácido Carbônico",
+      "formula": "H2CO3",
+      "molarMass": 62.03,
+      "state": "Liquid",
+      "boilingPoint": 333.15,
+      "meltingPoint": 273.15,
+      "commonUse": "Refrigerantes, água gaseificada"
+    },
+    {
+      "name": "Hipoclorito de Sódio",
+      "formula": "NaClO",
+      "molarMass": 74.44,
+      "state": "Liquid",
+      "boilingPoint": 374.15,
+      "meltingPoint": 291.15,
+      "commonUse": "Água sanitária, desinfetante"
+    },
+    {
+      "name": "Silicato de Sódio",
+      "formula": "Na2SiO3",
+      "molarMass": 122.06,
+      "state": "Solid",
+      "boilingPoint": 1361.15,
+      "meltingPoint": 1361.15,
+      "commonUse": "Vidro líquido, detergentes"
+    }
+  ]
+}

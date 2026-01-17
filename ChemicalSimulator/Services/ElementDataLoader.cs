@@ -69,38 +69,74 @@ namespace ChemicalSimulator.Services
                 return File.ReadAllText(jsonFilePath);
             }
 
+            // Lista de caminhos possíveis para tentar
+            var possiblePaths = new List<string>
+            {
+                // Caminho relativo ao executável
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Data", "ElementsData.json"),
+                
+                // Caminho no diretório do projeto (para debug)
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Resources", "Data", "ElementsData.json"),
+                
+                // Caminho direto na pasta Resources
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ElementsData.json"),
+                
+                // Caminho absoluto (se estiver em desenvolvimento)
+                Path.Combine(Environment.CurrentDirectory, "Resources", "Data", "ElementsData.json")
+            };
+
+            // Tentar cada caminho
+            foreach (var path in possiblePaths)
+            {
+                var normalizedPath = Path.GetFullPath(path);
+                if (File.Exists(normalizedPath))
+                {
+                    System.Diagnostics.Debug.WriteLine($"� Carregando elementos de: {normalizedPath}");
+                    return File.ReadAllText(normalizedPath);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Não encontrado em: {normalizedPath}");
+                }
+            }
+
             // Tentar carregar do recurso embarcado
             try
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                using (var stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE_NAME))
+                var resourceName = EMBEDDED_RESOURCE_NAME;
+                
+                // Listar todos os recursos para debug
+                var resources = assembly.GetManifestResourceNames();
+                System.Diagnostics.Debug.WriteLine($"📦 Recursos embarcados encontrados: {resources.Length}");
+                foreach (var res in resources)
+                {
+                    System.Diagnostics.Debug.WriteLine($"   - {res}");
+                }
+                
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
                 {
                     if (stream != null)
                     {
                         using (var reader = new StreamReader(stream))
                         {
-                            System.Diagnostics.Debug.WriteLine($"📦 Carregando elementos do recurso embarcado");
+                            System.Diagnostics.Debug.WriteLine($"✅ Carregando elementos do recurso embarcado: {resourceName}");
                             return reader.ReadToEnd();
                         }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️ Recurso embarcado não encontrado: {resourceName}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Não foi possível carregar recurso embarcado: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"⚠️ Erro ao carregar recurso embarcado: {ex.Message}");
             }
 
-            // Se não conseguiu carregar de nenhum lugar, tentar caminho relativo padrão
-            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, 
-                "Resources", "Data", "ElementsData.json");
-            
-            if (File.Exists(defaultPath))
-            {
-                System.Diagnostics.Debug.WriteLine($"📂 Carregando elementos de: {defaultPath}");
-                return File.ReadAllText(defaultPath);
-            }
-
-            throw new FileNotFoundException("Arquivo ElementsData.json não encontrado em nenhum local");
+            throw new FileNotFoundException($"Arquivo ElementsData.json não encontrado em nenhum local. " +
+                $"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
         }
 
         /// <summary>
@@ -115,8 +151,20 @@ namespace ChemicalSimulator.Services
                 throw new InvalidDataException("JSON não contém elementos válidos");
             }
 
-            System.Diagnostics.Debug.WriteLine($"✅ {data.Elements.Count} elementos carregados do JSON");
-            return data.Elements;
+            // Remover duplicatas baseado no número atômico (mantém o primeiro)
+            var uniqueElements = data.Elements
+                .GroupBy(e => e.AtomicNumber)
+                .Select(g => g.First())
+                .OrderBy(e => e.AtomicNumber)
+                .ToList();
+
+            if (uniqueElements.Count != data.Elements.Count)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ {data.Elements.Count - uniqueElements.Count} elemento(s) duplicado(s) removido(s)");
+            }
+
+            System.Diagnostics.Debug.WriteLine($"✅ {uniqueElements.Count} elementos carregados do JSON");
+            return uniqueElements;
         }
 
         /// <summary>
@@ -130,7 +178,7 @@ namespace ChemicalSimulator.Services
                 element.DisplayColor = GetCategoryColor(element.Category);
 
                 // Se não tiver raio de van der Waals, calcular estimativa
-                if (element.VanDerWaalsRadius == 0)
+                if (!element.VanDerWaalsRadius.HasValue || element.VanDerWaalsRadius.Value == 0)
                 {
                     element.VanDerWaalsRadius = GetVanDerWaalsRadius(element.Symbol);
                 }
@@ -316,7 +364,7 @@ namespace ChemicalSimulator.Services
                 return new List<Element>();
 
             var elements = LoadElements();
-            return elements.Where(e => e.Group == group).ToList();
+            return elements.Where(e => e.Group.HasValue && e.Group.Value == group).ToList();
         }
 
         /// <summary>

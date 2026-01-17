@@ -12,25 +12,29 @@ namespace ChemicalSimulator.Models
         public string Symbol { get; set; }
         public string Name { get; set; }
         public double AtomicMass { get; set; }
-        public int Group { get; set; }
+        public int? Group { get; set; }  // Anulável porque lantanídeos/actinídeos podem não ter grupo definido
         public int Period { get; set; }
         public ElementCategory Category { get; set; }
-        public double Electronegativity { get; set; }
-        public int[] ValenceElectrons { get; set; }
-        public double AtomicRadius { get; set; }
-        public double IonizationEnergy { get; set; }
+        public double? Electronegativity { get; set; }  // Anulável - alguns elementos não têm valor conhecido
+        public int[]? ValenceElectrons { get; set; }
+        public double? AtomicRadius { get; set; }  // Anulável - nem todos têm valor conhecido
+        public double? IonizationEnergy { get; set; }  // Anulável - alguns elementos não têm valor conhecido
 
         // Configuração eletrônica
-        public string ElectronConfiguration { get; set; }
+        public string? ElectronConfiguration { get; set; }
 
         // Estados de oxidação comuns
-        public int[] OxidationStates { get; set; }
+        public int[]? OxidationStates { get; set; }
 
         // Cor para visualização
         public Color DisplayColor { get; set; }
 
-        // Raio de van der Waals (para renderização 3D)
-        public double VanDerWaalsRadius { get; set; }
+        // Raio de van der Waals (para renderização 3D) - anulável pois nem todos têm valor conhecido
+        public double? VanDerWaalsRadius { get; set; }
+
+        // Propriedades físicas adicionais (podem ser null para elementos sintéticos/instáveis)
+        public double? BoilingPoint { get; set; }
+        public double? MeltingPoint { get; set; }
 
         public Element(int atomicNumber, string symbol, string name)
         {

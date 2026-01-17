@@ -34,7 +34,9 @@ namespace ChemicalSimulator.Services
 
         public double CalculateElectronegativityDifference(Element e1, Element e2)
         {
-            return Math.Abs(e1.Electronegativity - e2.Electronegativity);
+            double electronegativity1 = e1.Electronegativity ?? 0;
+            double electronegativity2 = e2.Electronegativity ?? 0;
+            return Math.Abs(electronegativity1 - electronegativity2);
         }
 
         public BondType DetermineBondType(Element e1, Element e2)

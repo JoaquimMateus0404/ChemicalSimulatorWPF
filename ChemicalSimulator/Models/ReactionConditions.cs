@@ -7,6 +7,7 @@ public class ReactionConditions
     public string Solvent { get; set; } = "None";
     public string Catalyst { get; set; } = "None";
     public double pH { get; set; } = 7.0;
+    public bool HasOxygen { get; set; } = true;
     public bool IsAcidic => pH < 7;
     public bool IsBasic => pH > 7;
 }
