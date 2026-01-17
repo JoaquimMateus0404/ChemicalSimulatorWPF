@@ -1,14 +1,15 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using ChemicalSimulator.Commands;
+using ChemicalSimulator.Helpers;
+using ChemicalSimulator.Infrastructure;
 using ChemicalSimulator.Models;
 using ChemicalSimulator.Services;
 
 namespace ChemicalSimulator.ViewModels
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : ViewModelBase
     {
         private readonly ChemistryEngine _chemistryEngine;
         private readonly ReactionPredictor _reactionPredictor;
@@ -20,55 +21,35 @@ namespace ChemicalSimulator.ViewModels
         public Molecule CurrentMolecule
         {
             get => _currentMolecule;
-            set
-            {
-                _currentMolecule = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _currentMolecule, value);
         }
 
         private Reaction _reaction;
         public Reaction Reaction
         {
             get => _reaction;
-            set
-            {
-                _reaction = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _reaction, value);
         }
 
         private ReactionConditions _conditions;
         public ReactionConditions Conditions
         {
             get => _conditions;
-            set
-            {
-                _conditions = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _conditions, value);
         }
 
         private string _statusMessage;
         public string StatusMessage
         {
             get => _statusMessage;
-            set
-            {
-                _statusMessage = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _statusMessage, value);
         }
 
         private bool _isProcessing;
         public bool IsProcessing
         {
             get => _isProcessing;
-            set
-            {
-                _isProcessing = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _isProcessing, value);
         }
 
         public ObservableCollection<Element> CommonElements { get; set; }
@@ -89,9 +70,10 @@ namespace ChemicalSimulator.ViewModels
 
         public MainViewModel()
         {
-            _chemistryEngine = new ChemistryEngine();
-            _reactionPredictor = new ReactionPredictor();
-            _exportService = new ExportService();
+            // Obter serviços do ServiceLocator
+            _chemistryEngine = ServiceLocator.Instance.GetService<ChemistryEngine>();
+            _reactionPredictor = ServiceLocator.Instance.GetService<ReactionPredictor>();
+            _exportService = ServiceLocator.Instance.GetService<ExportService>();
 
             InitializeCollections();
             InitializeCommands();
@@ -105,36 +87,36 @@ namespace ChemicalSimulator.ViewModels
         {
             CommonElements = new ObservableCollection<Element>
             {
-                CreateElement(1, "H", "Hidrogênio", 1.008),
-                CreateElement(6, "C", "Carbono", 12.011),
-                CreateElement(7, "N", "Nitrogênio", 14.007),
-                CreateElement(8, "O", "Oxigênio", 15.999),
-                CreateElement(9, "F", "Flúor", 18.998),
-                CreateElement(11, "Na", "Sódio", 22.990),
-                CreateElement(12, "Mg", "Magnésio", 24.305),
-                CreateElement(15, "P", "Fósforo", 30.974),
-                CreateElement(16, "S", "Enxofre", 32.065),
-                CreateElement(17, "Cl", "Cloro", 35.453),
-                CreateElement(19, "K", "Potássio", 39.098),
-                CreateElement(20, "Ca", "Cálcio", 40.078),
-                CreateElement(26, "Fe", "Ferro", 55.845),
-                CreateElement(29, "Cu", "Cobre", 63.546),
-                CreateElement(30, "Zn", "Zinco", 65.38),
-                CreateElement(35, "Br", "Bromo", 79.904)
+                ElementFactory.CreateElement(1, "H", "Hidrogênio", 1.008, 2.20),
+                ElementFactory.CreateElement(6, "C", "Carbono", 12.011, 2.55),
+                ElementFactory.CreateElement(7, "N", "Nitrogênio", 14.007, 3.04),
+                ElementFactory.CreateElement(8, "O", "Oxigênio", 15.999, 3.44),
+                ElementFactory.CreateElement(9, "F", "Flúor", 18.998, 3.98),
+                ElementFactory.CreateElement(11, "Na", "Sódio", 22.990, 0.93),
+                ElementFactory.CreateElement(12, "Mg", "Magnésio", 24.305, 1.31),
+                ElementFactory.CreateElement(15, "P", "Fósforo", 30.974, 2.19),
+                ElementFactory.CreateElement(16, "S", "Enxofre", 32.065, 2.58),
+                ElementFactory.CreateElement(17, "Cl", "Cloro", 35.453, 3.16),
+                ElementFactory.CreateElement(19, "K", "Potássio", 39.098, 0.82),
+                ElementFactory.CreateElement(20, "Ca", "Cálcio", 40.078, 1.00),
+                ElementFactory.CreateElement(26, "Fe", "Ferro", 55.845, 1.83),
+                ElementFactory.CreateElement(29, "Cu", "Cobre", 63.546, 1.90),
+                ElementFactory.CreateElement(30, "Zn", "Zinco", 65.38, 1.65),
+                ElementFactory.CreateElement(35, "Br", "Bromo", 79.904, 2.96)
             };
 
             CommonMolecules = new ObservableCollection<Molecule>
             {
-                CreateCommonMolecule("Água", "H2O", 18.015),
-                CreateCommonMolecule("Metano", "CH4", 16.043),
-                CreateCommonMolecule("Etanol", "C2H5OH", 46.069),
-                CreateCommonMolecule("Ácido Acético", "CH3COOH", 60.052),
-                CreateCommonMolecule("Glicose", "C6H12O6", 180.156),
-                CreateCommonMolecule("Amônia", "NH3", 17.031),
-                CreateCommonMolecule("Dióxido de Carbono", "CO2", 44.009),
-                CreateCommonMolecule("Ácido Sulfúrico", "H2SO4", 98.079),
-                CreateCommonMolecule("Cloreto de Sódio", "NaCl", 58.443),
-                CreateCommonMolecule("Benzeno", "C6H6", 78.114)
+                ElementFactory.CreateCommonMolecule("Água", "H2O", 18.015, -285.8),
+                ElementFactory.CreateCommonMolecule("Metano", "CH4", 16.043, -74.6),
+                ElementFactory.CreateCommonMolecule("Etanol", "C2H5OH", 46.069, -277.6),
+                ElementFactory.CreateCommonMolecule("Ácido Acético", "CH3COOH", 60.052, -484.5),
+                ElementFactory.CreateCommonMolecule("Glicose", "C6H12O6", 180.156, -1273.3),
+                ElementFactory.CreateCommonMolecule("Amônia", "NH3", 17.031, -45.9),
+                ElementFactory.CreateCommonMolecule("Dióxido de Carbono", "CO2", 44.009, -393.5),
+                ElementFactory.CreateCommonMolecule("Ácido Sulfúrico", "H2SO4", 98.079, -814.0),
+                ElementFactory.CreateCommonMolecule("Cloreto de Sódio", "NaCl", 58.443, -411.2),
+                ElementFactory.CreateCommonMolecule("Benzeno", "C6H6", 78.114, 49.0)
             };
         }
 
@@ -158,8 +140,8 @@ namespace ChemicalSimulator.ViewModels
                 CurrentMolecule.Atoms.Count * 2.0, 0, 0);
 
             CurrentMolecule.AddAtom(element, position);
-            CurrentMolecule.CalculateMolarMass();
-            CurrentMolecule.Formula = CurrentMolecule.GetMolecularFormula();
+            CurrentMolecule.MolarMass = ChemistryCalculator.CalculateMolarMass(CurrentMolecule);
+            CurrentMolecule.Formula = ChemistryCalculator.GenerateMolecularFormula(CurrentMolecule);
 
             StatusMessage = $"Elemento {element.Symbol} adicionado";
             OnPropertyChanged(nameof(CurrentMolecule));
@@ -238,95 +220,5 @@ namespace ChemicalSimulator.ViewModels
         }
 
         #endregion
-
-        #region Helper Methods
-
-        private Element CreateElement(int atomicNumber, string symbol, string name, double mass)
-        {
-            return new Element(atomicNumber, symbol, name)
-            {
-                AtomicMass = mass,
-                Category = DetermineCategory(atomicNumber)
-            };
-        }
-
-        private ElementCategory DetermineCategory(int atomicNumber)
-        {
-            return atomicNumber switch
-            {
-                1 or 6 or 7 or 8 or 15 or 16 => ElementCategory.NonMetal,
-                9 or 17 or 35 => ElementCategory.Halogen,
-                11 or 19 => ElementCategory.AlkaliMetal,
-                12 or 20 => ElementCategory.AlkalineEarthMetal,
-                26 or 29 or 30 => ElementCategory.TransitionMetal,
-                _ => ElementCategory.NonMetal
-            };
-        }
-
-        private Molecule CreateCommonMolecule(string name, string formula, double molarMass)
-        {
-            return new Molecule
-            {
-                Name = name,
-                Formula = formula,
-                MolarMass = molarMass
-            };
-        }
-
-        #endregion
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion
-    }
-
-    // RelayCommand Helper
-    public class RelayCommand : ICommand
-    {
-        private readonly Action _execute;
-        private readonly Func<bool> _canExecute;
-
-        public RelayCommand(Action execute, Func<bool> canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler CanExecuteChanged
-        {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
-        }
-
-        public bool CanExecute(object parameter) => _canExecute?.Invoke() ?? true;
-        public void Execute(object parameter) => _execute();
-    }
-
-    public class RelayCommand<T> : ICommand
-    {
-        private readonly Action<T> _execute;
-        private readonly Func<bool> _canExecute;
-
-        public RelayCommand(Action<T> execute, Func<bool> canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler CanExecuteChanged
-        {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
-        }
-
-        public bool CanExecute(object parameter) => _canExecute?.Invoke() ?? true;
-        public void Execute(object parameter) => _execute((T)parameter);
     }
 }

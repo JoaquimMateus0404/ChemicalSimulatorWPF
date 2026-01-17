@@ -1,10 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using ChemicalSimulator.Commands;
+using ChemicalSimulator.Infrastructure;
 using ChemicalSimulator.Models;
 using ChemicalSimulator.Services;
 
@@ -13,7 +13,7 @@ namespace ChemicalSimulator.ViewModels
     /// <summary>
     /// ViewModel para simulação de reações químicas
     /// </summary>
-    public class SimulationViewModel : INotifyPropertyChanged
+    public class SimulationViewModel : ViewModelBase
     {
         private readonly ReactionPredictor _reactionPredictor;
         private readonly ChemistryEngine _chemistryEngine;
@@ -28,8 +28,9 @@ namespace ChemicalSimulator.ViewModels
 
         public SimulationViewModel()
         {
-            _reactionPredictor = new ReactionPredictor();
-            _chemistryEngine = new ChemistryEngine();
+            // Obter serviços do ServiceLocator
+            _reactionPredictor = ServiceLocator.Instance.GetService<ReactionPredictor>();
+            _chemistryEngine = ServiceLocator.Instance.GetService<ChemistryEngine>();
 
             Conditions = new ReactionConditions();
             Reactants = new ObservableCollection<Molecule>();
@@ -45,70 +46,47 @@ namespace ChemicalSimulator.ViewModels
             get => _currentReaction;
             set
             {
-                _currentReaction = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(HasReaction));
+                if (SetProperty(ref _currentReaction, value))
+                {
+                    OnPropertyChanged(nameof(HasReaction));
+                }
             }
         }
 
         public ReactionConditions Conditions
         {
             get => _conditions;
-            set
-            {
-                _conditions = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _conditions, value);
         }
 
         public bool IsSimulating
         {
             get => _isSimulating;
-            set
-            {
-                _isSimulating = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _isSimulating, value);
         }
 
         public double SimulationProgress
         {
             get => _simulationProgress;
-            set
-            {
-                _simulationProgress = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _simulationProgress, value);
         }
 
         public string StatusMessage
         {
             get => _statusMessage;
-            set
-            {
-                _statusMessage = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _statusMessage, value);
         }
 
         public ObservableCollection<Molecule> Reactants
         {
             get => _reactants;
-            set
-            {
-                _reactants = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _reactants, value);
         }
 
         public ObservableCollection<Molecule> Products
         {
             get => _products;
-            set
-            {
-                _products = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _products, value);
         }
 
         public bool HasReaction => CurrentReaction != null;
@@ -321,17 +299,6 @@ namespace ChemicalSimulator.ViewModels
             Conditions.Pressure = pressure;
             Conditions.pH = pH;
             OnPropertyChanged(nameof(Conditions));
-        }
-
-        #endregion
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion

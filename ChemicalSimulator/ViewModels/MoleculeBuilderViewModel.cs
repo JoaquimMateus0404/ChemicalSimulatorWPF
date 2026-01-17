@@ -1,20 +1,19 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
+using ChemicalSimulator.Commands;
+using ChemicalSimulator.Helpers;
 using ChemicalSimulator.Models;
-using ChemicalSimulator.Services;
 
 namespace ChemicalSimulator.ViewModels
 {
     /// <summary>
     /// ViewModel para construção de moléculas
     /// </summary>
-    public class MoleculeBuilderViewModel : INotifyPropertyChanged
+    public class MoleculeBuilderViewModel : ViewModelBase
     {
         private Molecule _currentMolecule;
         private Atom _selectedAtom1;
@@ -38,61 +37,42 @@ namespace ChemicalSimulator.ViewModels
             get => _currentMolecule;
             set
             {
-                _currentMolecule = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(AtomCount));
-                OnPropertyChanged(nameof(BondCount));
+                if (SetProperty(ref _currentMolecule, value))
+                {
+                    OnPropertyChanged(nameof(AtomCount));
+                    OnPropertyChanged(nameof(BondCount));
+                }
             }
         }
 
         public Atom SelectedAtom1
         {
             get => _selectedAtom1;
-            set
-            {
-                _selectedAtom1 = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _selectedAtom1, value);
         }
 
         public Atom SelectedAtom2
         {
             get => _selectedAtom2;
-            set
-            {
-                _selectedAtom2 = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _selectedAtom2, value);
         }
 
         public BondType SelectedBondType
         {
             get => _selectedBondType;
-            set
-            {
-                _selectedBondType = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _selectedBondType, value);
         }
 
         public string MoleculeName
         {
             get => _moleculeName;
-            set
-            {
-                _moleculeName = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _moleculeName, value);
         }
 
         public bool IsEditMode
         {
             get => _isEditMode;
-            set
-            {
-                _isEditMode = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _isEditMode, value);
         }
 
         public int AtomCount => CurrentMolecule?.Atoms.Count ?? 0;
@@ -133,8 +113,8 @@ namespace ChemicalSimulator.ViewModels
             var position = CalculateNewAtomPosition();
 
             CurrentMolecule.AddAtom(element, position);
-            CurrentMolecule.CalculateMolarMass();
-            CurrentMolecule.Formula = CurrentMolecule.GetMolecularFormula();
+            CurrentMolecule.MolarMass = ChemistryCalculator.CalculateMolarMass(CurrentMolecule);
+            CurrentMolecule.Formula = ChemistryCalculator.GenerateMolecularFormula(CurrentMolecule);
 
             OnPropertyChanged(nameof(CurrentMolecule));
             OnPropertyChanged(nameof(AtomCount));
@@ -155,8 +135,8 @@ namespace ChemicalSimulator.ViewModels
             }
 
             CurrentMolecule.Atoms.Remove(atom);
-            CurrentMolecule.CalculateMolarMass();
-            CurrentMolecule.Formula = CurrentMolecule.GetMolecularFormula();
+            CurrentMolecule.MolarMass = ChemistryCalculator.CalculateMolarMass(CurrentMolecule);
+            CurrentMolecule.Formula = ChemistryCalculator.GenerateMolecularFormula(CurrentMolecule);
 
             OnPropertyChanged(nameof(CurrentMolecule));
             OnPropertyChanged(nameof(AtomCount));
@@ -191,9 +171,9 @@ namespace ChemicalSimulator.ViewModels
                     Atom1 = SelectedAtom1,
                     Atom2 = SelectedAtom2,
                     Type = SelectedBondType,
-                    Length = CalculateBondLength(SelectedAtom1.Position, SelectedAtom2.Position)
+                    Length = ChemistryCalculator.CalculateBondLength(SelectedAtom1, SelectedAtom2)
                 };
-                bond.Energy = bond.GetBondEnergy();
+                bond.Energy = ChemistryCalculator.CalculateBondEnergy(bond);
                 CurrentMolecule.Bonds.Add(bond);
             }
 
@@ -242,8 +222,10 @@ namespace ChemicalSimulator.ViewModels
             // Algoritmo simples de otimização baseado em comprimentos de ligação
             foreach (var bond in CurrentMolecule.Bonds)
             {
-                var idealLength = GetIdealBondLength(bond.Type, bond.Atom1.Element, bond.Atom2.Element);
-                var currentLength = CalculateBondLength(bond.Atom1.Position, bond.Atom2.Position);
+                var idealLength = ChemistryCalculator.GetIdealBondLength(
+                    bond.Type, bond.Atom1.Element, bond.Atom2.Element);
+                var currentLength = ChemistryCalculator.CalculateBondLength(
+                    bond.Atom1, bond.Atom2);
 
                 if (Math.Abs(currentLength - idealLength) > 0.1)
                 {
@@ -285,38 +267,9 @@ namespace ChemicalSimulator.ViewModels
             );
         }
 
-        private double CalculateBondLength(Point3D p1, Point3D p2)
-        {
-            var dx = p1.X - p2.X;
-            var dy = p1.Y - p2.Y;
-            var dz = p1.Z - p2.Z;
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
-        }
-
-        private double GetIdealBondLength(BondType bondType, Element e1, Element e2)
-        {
-            // Comprimentos de ligação ideais em Angstroms
-            var baseLengths = new System.Collections.Generic.Dictionary<string, double>
-            {
-                { "C-C", 1.54 }, { "C=C", 1.34 }, { "C≡C", 1.20 },
-                { "C-H", 1.09 }, { "O-H", 0.96 }, { "N-H", 1.01 },
-                { "C-O", 1.43 }, { "C=O", 1.20 }, { "C-N", 1.47 },
-                { "N=N", 1.25 }, { "N≡N", 1.10 }, { "O=O", 1.21 }
-            };
-
-            var key = bondType switch
-            {
-                BondType.Double => $"{e1.Symbol}={e2.Symbol}",
-                BondType.Triple => $"{e1.Symbol}≡{e2.Symbol}",
-                _ => $"{e1.Symbol}-{e2.Symbol}"
-            };
-
-            return baseLengths.ContainsKey(key) ? baseLengths[key] : 1.5;
-        }
-
         private void AdjustBondLength(Bond bond, double targetLength)
         {
-            var currentLength = CalculateBondLength(bond.Atom1.Position, bond.Atom2.Position);
+            var currentLength = ChemistryCalculator.CalculateBondLength(bond.Atom1, bond.Atom2);
             var scale = targetLength / currentLength;
 
             var midpoint = new Point3D(
@@ -331,17 +284,6 @@ namespace ChemicalSimulator.ViewModels
 
             bond.Atom1.Position = midpoint + vector1 * scale;
             bond.Atom2.Position = midpoint + vector2 * scale;
-        }
-
-        #endregion
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion
