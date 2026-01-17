@@ -1,28 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using ChemicalSimulator.Models;
+using ChemicalSimulator.ViewModels;
 
 namespace ChemicalSimulator.Controls
 {
-    /// <summary>
-    /// Interação lógica para PeriodicTableControl.xam
-    /// </summary>
     public partial class PeriodicTableControl : UserControl
     {
         public PeriodicTableControl()
         {
             InitializeComponent();
+        }
+
+        // Dependency Property para o elemento selecionado
+        public static readonly DependencyProperty SelectedElementProperty =
+            DependencyProperty.Register(
+                nameof(SelectedElement),
+                typeof(Element),
+                typeof(PeriodicTableControl),
+                new PropertyMetadata(null, OnSelectedElementChanged));
+
+        public Element SelectedElement
+        {
+            get => (Element)GetValue(SelectedElementProperty);
+            set => SetValue(SelectedElementProperty, value);
+        }
+
+        private static void OnSelectedElementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (PeriodicTableControl)d;
+            control.OnElementSelected(e.NewValue as Element);
+        }
+
+        private void OnElementSelected(Element element)
+        {
+            // Evento pode ser usado pelo ViewModel
+            ElementSelected?.Invoke(this, new ElementSelectedEventArgs(element));
+        }
+
+        public event EventHandler<ElementSelectedEventArgs> ElementSelected;
+    }
+
+    public class ElementSelectedEventArgs : EventArgs
+    {
+        public Element Element { get; }
+
+        public ElementSelectedEventArgs(Element element)
+        {
+            Element = element;
         }
     }
 }

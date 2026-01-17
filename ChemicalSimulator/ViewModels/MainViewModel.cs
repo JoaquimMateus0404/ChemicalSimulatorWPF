@@ -78,12 +78,12 @@ namespace ChemicalSimulator.ViewModels
 
         #region Commands
 
-        public ICommand AddElementCommand { get; }
-        public ICommand AddBondCommand { get; }
-        public ICommand SimulateReactionCommand { get; }
-        public ICommand ExportResultsCommand { get; }
-        public ICommand ClearWorkspaceCommand { get; }
-        public ICommand LoadMoleculeCommand { get; }
+        public ICommand AddElementCommand { get; private set; }
+        public ICommand AddBondCommand { get; private set; }
+        public ICommand SimulateReactionCommand { get; private set; }
+        public ICommand ExportResultsCommand { get; private set; }
+        public ICommand ClearWorkspaceCommand { get; private set; }
+        public ICommand LoadMoleculeCommand { get; private set; }
 
         #endregion
 
