@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Media;
 using Newtonsoft.Json;
 using ChemicalSimulator.Models;
@@ -10,45 +11,129 @@ namespace ChemicalSimulator.Services
 {
     /// <summary>
     /// Carrega dados dos elementos químicos de arquivos JSON
+    /// Implementa cache para performance e fallback para dados embarcados
     /// </summary>
     public class ElementDataLoader
     {
+        private const string EMBEDDED_RESOURCE_NAME = "ChemicalSimulator.Resources.Data.ElementsData.json";
         private static List<Element> _cachedElements;
+        private static readonly object _lockObject = new object();
 
-        public static List<Element> LoadElements(string jsonFilePath = null)
+        /// <summary>
+        /// Carrega todos os elementos químicos do JSON ou cache
+        /// </summary>
+        /// <param name="jsonFilePath">Caminho opcional do arquivo JSON. Se nulo, usa recurso embarcado</param>
+        /// <returns>Lista de elementos químicos</returns>
+        public List<Element> LoadElements(string jsonFilePath = null)
         {
+            // Thread-safe double-checked locking
             if (_cachedElements != null)
                 return _cachedElements;
 
+            lock (_lockObject)
+            {
+                if (_cachedElements != null)
+                    return _cachedElements;
+
+                try
+                {
+                    string json = LoadJsonContent(jsonFilePath);
+                    _cachedElements = ParseElementsFromJson(json);
+                    EnrichElementsData(_cachedElements);
+                    
+                    return _cachedElements;
+                }
+                catch (Exception ex)
+                {
+                    // Log do erro e fallback para elementos básicos
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Erro ao carregar elementos do JSON: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"📌 Usando elementos básicos como fallback");
+                    
+                    _cachedElements = CreateBasicElements();
+                    EnrichElementsData(_cachedElements);
+                    
+                    return _cachedElements;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Carrega o conteúdo JSON de arquivo ou recurso embarcado
+        /// </summary>
+        private string LoadJsonContent(string jsonFilePath)
+        {
+            // Se foi especificado um arquivo, tentar carregar dele
+            if (!string.IsNullOrEmpty(jsonFilePath) && File.Exists(jsonFilePath))
+            {
+                System.Diagnostics.Debug.WriteLine($"📂 Carregando elementos de: {jsonFilePath}");
+                return File.ReadAllText(jsonFilePath);
+            }
+
+            // Tentar carregar do recurso embarcado
             try
             {
-                string json;
-
-                if (string.IsNullOrEmpty(jsonFilePath))
+                var assembly = Assembly.GetExecutingAssembly();
+                using (var stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE_NAME))
                 {
-                    // Usar dados embedded ou criar elementos básicos
-                    _cachedElements = CreateBasicElements();
-                }
-                else
-                {
-                    json = File.ReadAllText(jsonFilePath);
-                    var data = JsonConvert.DeserializeObject<ElementDataContainer>(json);
-                    _cachedElements = data.Elements;
-
-                    // Configurar cores
-                    foreach (var element in _cachedElements)
+                    if (stream != null)
                     {
-                        element.DisplayColor = GetCategoryColor(element.Category);
+                        using (var reader = new StreamReader(stream))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"📦 Carregando elementos do recurso embarcado");
+                            return reader.ReadToEnd();
+                        }
                     }
                 }
-
-                return _cachedElements;
             }
             catch (Exception ex)
             {
-                // Em caso de erro, retornar elementos básicos
-                Console.WriteLine($"Erro ao carregar elementos: {ex.Message}");
-                return CreateBasicElements();
+                System.Diagnostics.Debug.WriteLine($"⚠️ Não foi possível carregar recurso embarcado: {ex.Message}");
+            }
+
+            // Se não conseguiu carregar de nenhum lugar, tentar caminho relativo padrão
+            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, 
+                "Resources", "Data", "ElementsData.json");
+            
+            if (File.Exists(defaultPath))
+            {
+                System.Diagnostics.Debug.WriteLine($"📂 Carregando elementos de: {defaultPath}");
+                return File.ReadAllText(defaultPath);
+            }
+
+            throw new FileNotFoundException("Arquivo ElementsData.json não encontrado em nenhum local");
+        }
+
+        /// <summary>
+        /// Faz o parse do JSON para objetos Element
+        /// </summary>
+        private List<Element> ParseElementsFromJson(string json)
+        {
+            var data = JsonConvert.DeserializeObject<ElementDataContainer>(json);
+            
+            if (data?.Elements == null || data.Elements.Count == 0)
+            {
+                throw new InvalidDataException("JSON não contém elementos válidos");
+            }
+
+            System.Diagnostics.Debug.WriteLine($"✅ {data.Elements.Count} elementos carregados do JSON");
+            return data.Elements;
+        }
+
+        /// <summary>
+        /// Enriquece os dados dos elementos com informações adicionais
+        /// </summary>
+        private void EnrichElementsData(List<Element> elements)
+        {
+            foreach (var element in elements)
+            {
+                // Configurar cor de exibição baseada na categoria
+                element.DisplayColor = GetCategoryColor(element.Category);
+
+                // Se não tiver raio de van der Waals, calcular estimativa
+                if (element.VanDerWaalsRadius == 0)
+                {
+                    element.VanDerWaalsRadius = GetVanDerWaalsRadius(element.Symbol);
+                }
             }
         }
 
@@ -162,30 +247,135 @@ namespace ChemicalSimulator.Services
             };
         }
 
-        public static Element GetElementBySymbol(string symbol)
+        /// <summary>
+        /// Obtém um elemento pelo símbolo químico
+        /// </summary>
+        public Element GetElementBySymbol(string symbol)
         {
+            if (string.IsNullOrWhiteSpace(symbol))
+                return null;
+
             var elements = LoadElements();
             return elements.FirstOrDefault(e =>
                 e.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         }
 
-        public static Element GetElementByAtomicNumber(int atomicNumber)
+        /// <summary>
+        /// Obtém um elemento pelo número atômico
+        /// </summary>
+        public Element GetElementByAtomicNumber(int atomicNumber)
         {
+            if (atomicNumber <= 0)
+                return null;
+
             var elements = LoadElements();
             return elements.FirstOrDefault(e => e.AtomicNumber == atomicNumber);
         }
 
-        public static List<Element> GetElementsByCategory(ElementCategory category)
+        /// <summary>
+        /// Obtém elementos pelo nome (busca parcial)
+        /// </summary>
+        public List<Element> SearchElementsByName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return new List<Element>();
+
+            var elements = LoadElements();
+            return elements.Where(e =>
+                e.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Obtém todos os elementos de uma categoria específica
+        /// </summary>
+        public List<Element> GetElementsByCategory(ElementCategory category)
         {
             var elements = LoadElements();
             return elements.Where(e => e.Category == category).ToList();
         }
+
+        /// <summary>
+        /// Obtém elementos de um período específico
+        /// </summary>
+        public List<Element> GetElementsByPeriod(int period)
+        {
+            if (period <= 0 || period > 7)
+                return new List<Element>();
+
+            var elements = LoadElements();
+            return elements.Where(e => e.Period == period).ToList();
+        }
+
+        /// <summary>
+        /// Obtém elementos de um grupo específico
+        /// </summary>
+        public List<Element> GetElementsByGroup(int group)
+        {
+            if (group <= 0 || group > 18)
+                return new List<Element>();
+
+            var elements = LoadElements();
+            return elements.Where(e => e.Group == group).ToList();
+        }
+
+        /// <summary>
+        /// Limpa o cache de elementos (útil para testes ou recarregamento)
+        /// </summary>
+        public void ClearCache()
+        {
+            lock (_lockObject)
+            {
+                _cachedElements = null;
+                System.Diagnostics.Debug.WriteLine("🔄 Cache de elementos limpo");
+            }
+        }
+
+        /// <summary>
+        /// Obtém estatísticas sobre os elementos carregados
+        /// </summary>
+        public ElementStatistics GetStatistics()
+        {
+            var elements = LoadElements();
+            
+            return new ElementStatistics
+            {
+                TotalElements = elements.Count,
+                ElementsByCategory = elements.GroupBy(e => e.Category)
+                    .ToDictionary(g => g.Key, g => g.Count()),
+                ElementsByPeriod = elements.GroupBy(e => e.Period)
+                    .ToDictionary(g => g.Key, g => g.Count()),
+                AverageAtomicMass = elements.Average(e => e.AtomicMass),
+                MaxAtomicNumber = elements.Max(e => e.AtomicNumber)
+            };
+        }
     }
 
-    // Classe auxiliar para deserialização JSON
+    /// <summary>
+    /// Classe auxiliar para deserialização JSON
+    /// </summary>
     internal class ElementDataContainer
     {
         [JsonProperty("elements")]
         public List<Element> Elements { get; set; }
+    }
+
+    /// <summary>
+    /// Estatísticas sobre os elementos carregados
+    /// </summary>
+    public class ElementStatistics
+    {
+        public int TotalElements { get; set; }
+        public Dictionary<ElementCategory, int> ElementsByCategory { get; set; }
+        public Dictionary<int, int> ElementsByPeriod { get; set; }
+        public double AverageAtomicMass { get; set; }
+        public int MaxAtomicNumber { get; set; }
+
+        public override string ToString()
+        {
+            return $"Total: {TotalElements} elementos | " +
+                   $"Maior Z: {MaxAtomicNumber} | " +
+                   $"Massa média: {AverageAtomicMass:F2}";
+        }
     }
 }
