@@ -300,6 +300,8 @@ namespace ChemicalSimulator.ViewModels
         public ICommand ShowTutorialCommand { get; }
         public ICommand DeleteSelectedCommand { get; }
         public ICommand Toggle3DViewCommand { get; }
+        public ICommand ZoomInCommand { get; }
+        public ICommand ZoomOutCommand { get; }
         public ICommand ResetZoomCommand { get; }
         public ICommand OptimizeGeometryCommand { get; }
         public ICommand SelectElementCommand { get; }
@@ -360,6 +362,8 @@ namespace ChemicalSimulator.ViewModels
             ShowTutorialCommand = new RelayCommand(ShowTutorial);
             DeleteSelectedCommand = new RelayCommand(DeleteSelected, () => SelectedAtom != null || SelectedBond != null);
             Toggle3DViewCommand = new RelayCommand(() => Show3DView = !Show3DView);
+            ZoomInCommand = new RelayCommand(() => ZoomLevel = Math.Min(ZoomLevel + 0.1, 3.0));
+            ZoomOutCommand = new RelayCommand(() => ZoomLevel = Math.Max(ZoomLevel - 0.1, 0.1));
             ResetZoomCommand = new RelayCommand(() => ZoomLevel = 1.0);
             OptimizeGeometryCommand = new RelayCommand(OptimizeGeometry, () => Atoms.Count >= 2 && Bonds.Count >= 1);
             SelectElementCommand = new RelayCommand<Element>(element => SelectedElement = element, e => e != null);

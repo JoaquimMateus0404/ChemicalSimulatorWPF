@@ -2076,66 +2076,59 @@
     "meltingPoint": null
   },
   {
-    "atomicNumber": 116,
-    "symbol": "Lv",
-    "name": "Livermorium",
-    "atomicMass": 293,
-    "group": 16,
-    "period": 7,
-    "category": "PostTransitionMetal",
-    "electronegativity": null,
-    "valenceElectrons": [16],
-    "atomicRadius": 175,
-    "ionizationEnergy": null,
-    "electronConfiguration": "[Rn] 5f14 6d10 7s2 7p4",
-    "oxidationStates": [2, 4],
-    "vanDerWaalsRadius": null,
-    "boilingPoint": null,
-    "meltingPoint": null
-  },
-  {
-    "atomicNumber": 117,
-    "symbol": "Ts",
-    "name": "Tennessine",
-    "atomicMass": 294,
-    "group": 17,
-    "period": 7,
-    "category": "Halogen",
-    "electronegativity": null,
-    "valenceElectrons": [17],
-    "atomicRadius": 175,
-    "ionizationEnergy": null,
-    "electronConfiguration": "[Rn] 5f14 6d10 7s2 7p5",
-    "oxidationStates": [-1, 1, 3, 5],
-    "vanDerWaalsRadius": null,
-    "boilingPoint": null,
-    "meltingPoint": null
-  },
-  {
-    "atomicNumber": 118,
-    "symbol": "Og",
-    "name": "Oganesson",
-    "atomicMass": 294,
-    "group": 18,
-    "period": 7,
-    "category": "NobleGas",
-    "electronegativity": null,
-    "valenceElectrons": [18],
-    "atomicRadius": 152,
-    "ionizationEnergy": null,
-    "electronConfiguration": "[Rn] 5f14 6d10 7s2 7p6",
-    "oxidationStates": [0, 2],
-    "vanDerWaalsRadius": null,
-    "boilingPoint": null,
-    "meltingPoint": null
-  }
-
-
-
-
-
-
-
+      "atomicNumber": 116,
+      "symbol": "Lv",
+      "name": "Livermorium",
+      "atomicMass": 293,
+      "group": 16,
+      "period": 7,
+      "category": "PostTransitionMetal",
+      "electronegativity": null,
+      "valenceElectrons": [16],
+      "atomicRadius": 175,
+      "ionizationEnergy": null,
+      "electronConfiguration": "[Rn] 5f14 6d10 7s2 7p4",
+      "oxidationStates": [2, 4],
+      "vanDerWaalsRadius": null,
+      "boilingPoint": null,
+      "meltingPoint": null
+    },
+    {
+      "atomicNumber": 117,
+      "symbol": "Ts",
+      "name": "Tennessine",
+      "atomicMass": 294,
+      "group": 17,
+      "period": 7,
+      "category": "Halogen",
+      "electronegativity": null,
+      "valenceElectrons": [17],
+      "atomicRadius": 175,
+      "ionizationEnergy": null,
+      "electronConfiguration": "[Rn] 5f14 6d10 7s2 7p5",
+      "oxidationStates": [-1, 1, 3, 5],
+      "vanDerWaalsRadius": null,
+      "boilingPoint": null,
+      "meltingPoint": null
+    },
+    {
+      "atomicNumber": 118,
+      "symbol": "Og",
+      "name": "Oganesson",
+      "atomicMass": 294,
+      "group": 18,
+      "period": 7,
+      "category": "NobleGas",
+      "electronegativity": null,
+      "valenceElectrons": [ 18 ],
+      "atomicRadius": 152,
+      "ionizationEnergy": null,
+      "electronConfiguration": "[Rn] 5f14 6d10 7s2 7p6",
+      "oxidationStates": [ 0, 2 ],
+      "vanDerWaalsRadius": null,
+      "boilingPoint": null,
+      "meltingPoint": null
+    }
 
   ]
 }

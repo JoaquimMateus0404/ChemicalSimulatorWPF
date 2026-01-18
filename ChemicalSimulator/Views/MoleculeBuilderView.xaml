@@ -174,7 +174,7 @@
                         <TextBlock Text="📚 Templates" 
                                    FontWeight="SemiBold" 
                                    Margin="0,0,0,8"/>
-                        
+
                         <ListBox ItemsSource="{Binding MoleculeTemplates}"
                                  SelectedItem="{Binding SelectedTemplate}"
                                  MaxHeight="200">
@@ -199,34 +199,6 @@
                                 Margin="0,8,0,0"/>
                     </StackPanel>
                 </materialDesign:Card>
-
-                <!-- Ações Rápidas -->
-                <materialDesign:Card Style="{StaticResource InfoCard}">
-                    <StackPanel>
-                        <TextBlock Text="⚡ Ações Rápidas" 
-                                   FontWeight="SemiBold" 
-                                   Margin="0,0,0,8"/>
-                        
-                        <Button Content="🔄 Desfazer (Ctrl+Z)" 
-                                Command="{Binding UndoCommand}"
-                                IsEnabled="{Binding CanUndo}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Margin="0,4"/>
-                        <Button Content="🔃 Refazer (Ctrl+Y)" 
-                                Command="{Binding RedoCommand}"
-                                IsEnabled="{Binding CanRedo}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Margin="0,4"/>
-                        <Button Content="🗑️ Limpar Tudo" 
-                                Command="{Binding ClearMoleculeCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Margin="0,4"/>
-                        <Button Content="❓ Tutorial (F1)" 
-                                Command="{Binding ShowTutorialCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Margin="0,4"/>
-                    </StackPanel>
-                </materialDesign:Card>
             </StackPanel>
         </ScrollViewer>
 
@@ -243,6 +215,35 @@
             <!-- Toolbar Superior -->
             <materialDesign:Card Grid.Row="0" Margin="4">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="8">
+                    <!-- Ações Rápidas -->
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Desfazer (Ctrl+Z)"
+                            Command="{Binding UndoCommand}"
+                            IsEnabled="{Binding CanUndo}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="Undo" Width="24" Height="24"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Refazer (Ctrl+Y)"
+                            Command="{Binding RedoCommand}"
+                            IsEnabled="{Binding CanRedo}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="Redo" Width="24" Height="24"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Limpar Tudo"
+                            Command="{Binding ClearMoleculeCommand}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="Delete" Width="24" Height="24"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Tutorial (F1)"
+                            Command="{Binding ShowTutorialCommand}"
+                            Margin="4">
+                        <materialDesign:PackIcon Kind="HelpCircle" Width="24" Height="24"/>
+                    </Button>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="8,0"/>
+                    <!-- Arquivos -->
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             ToolTip="Salvar Molécula (Ctrl+S)"
                             Command="{Binding SaveMoleculeCommand}"
@@ -256,13 +257,16 @@
                         <materialDesign:PackIcon Kind="Export" Width="24" Height="24"/>
                     </Button>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="8,0"/>
+                    <!-- Visualização -->
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             ToolTip="Zoom In"
+                            Command="{Binding ZoomInCommand}"
                             Margin="4">
                         <materialDesign:PackIcon Kind="MagnifyPlus" Width="24" Height="24"/>
                     </Button>
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             ToolTip="Zoom Out"
+                            Command="{Binding ZoomOutCommand}"
                             Margin="4">
                         <materialDesign:PackIcon Kind="MagnifyMinus" Width="24" Height="24"/>
                     </Button>
@@ -273,6 +277,7 @@
                         <materialDesign:PackIcon Kind="Refresh" Width="24" Height="24"/>
                     </Button>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="8,0"/>
+                    <!-- 3D -->
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             ToolTip="Otimizar Geometria 3D"
                             Command="{Binding OptimizeGeometryCommand}"
@@ -330,6 +335,13 @@
                                            ZoomExtentsWhenLoaded="True"
                                            CameraRotationMode="Turntable"
                                            CameraMode="Inspect"
+                                           IsRotationEnabled="True"
+                                           IsMoveEnabled="True"
+                                           IsZoomEnabled="True"
+                                           IsPanEnabled="True"
+                                           RotateGesture="LeftClick"
+                                           PanGesture="RightClick"
+                                           ZoomGesture="MiddleClick"
                                            MouseDown="Viewport3D_MouseDown">
                         <helix:DefaultLights/>
                         
@@ -435,12 +447,40 @@
                                 Margin="8,4"
                                 Width="150"/>
                         
+                        <Button Content="🎯 Centralizar Molécula"
+                                Click="CenterMolecule"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Foreground="White"
+                                BorderBrush="White"
+                                Margin="8,4"
+                                Width="150"/>
+                        
                         <CheckBox Content="Mostrar Etiquetas"
                                   x:Name="ShowLabelsCheckbox"
                                   Foreground="White"
                                   Margin="8,4"
                                   Checked="ShowLabels_Changed"
                                   Unchecked="ShowLabels_Changed"/>
+                        
+                        <!-- Dicas de Interação -->
+                        <Separator Margin="8,8" Background="White" Opacity="0.3"/>
+                        <TextBlock Text="🖱️ Controles do Mouse:" 
+                                   FontSize="10" 
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   Margin="8,4,8,2"/>
+                        <TextBlock Text="• Botão Esquerdo: Rotacionar" 
+                                   FontSize="9" 
+                                   Foreground="White"
+                                   Margin="8,2"/>
+                        <TextBlock Text="• Botão Direito: Mover" 
+                                   FontSize="9" 
+                                   Foreground="White"
+                                   Margin="8,2"/>
+                        <TextBlock Text="• Scroll: Zoom" 
+                                   FontSize="9" 
+                                   Foreground="White"
+                                   Margin="8,2"/>
                     </StackPanel>
 
                     <!-- Informações de Medição -->

@@ -37,6 +37,15 @@ namespace ChemicalSimulator.Views
                 // Renderizar 3D também
                 ViewModel.Atoms.CollectionChanged += (s, args) => Render3DMolecule();
                 ViewModel.Bonds.CollectionChanged += (s, args) => Render3DMolecule();
+                
+                // Monitorar mudanças na propriedade Show3DView para centralizar molécula
+                ViewModel.PropertyChanged += (s, args) =>
+                {
+                    if (args.PropertyName == nameof(ViewModel.Show3DView) && ViewModel.Show3DView)
+                    {
+                        CenterAndFitMolecule();
+                    }
+                };
             }
         }
 
@@ -544,13 +553,79 @@ namespace ChemicalSimulator.Views
         /// </summary>
         private void ResetCamera(object sender, RoutedEventArgs e)
         {
-            if (Viewport3D?.Camera is PerspectiveCamera camera)
+            CenterAndFitMolecule();
+        }
+
+        /// <summary>
+        /// Centraliza e ajusta a câmera para visualizar toda a molécula
+        /// </summary>
+        private void CenterAndFitMolecule()
+        {
+            if (Viewport3D == null) return;
+
+            // Se houver átomos, calcular o centro da molécula
+            if (ViewModel?.Atoms != null && ViewModel.Atoms.Any())
             {
-                camera.Position = new Point3D(10, 10, 10);
-                camera.LookDirection = new Vector3D(-10, -10, -10);
-                camera.UpDirection = new Vector3D(0, 1, 0);
-                camera.FieldOfView = 45;
+                // Calcular o centro geométrico da molécula
+                double centerX = ViewModel.Atoms.Average(a => a.Position.X) / 50;
+                double centerY = ViewModel.Atoms.Average(a => a.Position.Y) / 50;
+                double centerZ = ViewModel.Atoms.Average(a => a.Position.Z) / 50;
+
+                // Calcular o tamanho da molécula para ajustar a distância da câmera
+                double maxX = ViewModel.Atoms.Max(a => a.Position.X) / 50;
+                double minX = ViewModel.Atoms.Min(a => a.Position.X) / 50;
+                double maxY = ViewModel.Atoms.Max(a => a.Position.Y) / 50;
+                double minY = ViewModel.Atoms.Min(a => a.Position.Y) / 50;
+                double maxZ = ViewModel.Atoms.Max(a => a.Position.Z) / 50;
+                double minZ = ViewModel.Atoms.Min(a => a.Position.Z) / 50;
+
+                double sizeX = maxX - minX;
+                double sizeY = maxY - minY;
+                double sizeZ = maxZ - minZ;
+                double moleculeSize = Math.Max(Math.Max(sizeX, sizeY), sizeZ);
+
+                // Distância da câmera baseada no tamanho da molécula
+                double cameraDistance = Math.Max(10, moleculeSize * 3);
+
+                if (Viewport3D.Camera is PerspectiveCamera camera)
+                {
+                    // Posicionar câmera olhando para o centro da molécula
+                    camera.Position = new Point3D(
+                        centerX + cameraDistance,
+                        centerY + cameraDistance,
+                        centerZ + cameraDistance
+                    );
+                    camera.LookDirection = new Vector3D(
+                        -cameraDistance,
+                        -cameraDistance,
+                        -cameraDistance
+                    );
+                    camera.UpDirection = new Vector3D(0, 1, 0);
+                    camera.FieldOfView = 45;
+                }
             }
+            else
+            {
+                // Posição padrão se não houver átomos
+                if (Viewport3D.Camera is PerspectiveCamera camera)
+                {
+                    camera.Position = new Point3D(10, 10, 10);
+                    camera.LookDirection = new Vector3D(-10, -10, -10);
+                    camera.UpDirection = new Vector3D(0, 1, 0);
+                    camera.FieldOfView = 45;
+                }
+            }
+
+            // Usar o método ZoomExtents do Helix Toolkit para ajustar automaticamente
+            Viewport3D.ZoomExtents(500); // 500ms de animação
+        }
+
+        /// <summary>
+        /// Centraliza a molécula na vista 3D
+        /// </summary>
+        private void CenterMolecule(object sender, RoutedEventArgs e)
+        {
+            CenterAndFitMolecule();
         }
 
         /// <summary>
