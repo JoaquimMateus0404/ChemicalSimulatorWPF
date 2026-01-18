@@ -11,9 +11,11 @@ namespace ChemicalSimulator.Services.Chemistry
     public class ChemicalRuleEngine
     {
         private readonly List<ChemicalRule> _rules = new List<ChemicalRule>();
+        private readonly ElementClassifier _elementClassifier;
 
-        public ChemicalRuleEngine()
+        public ChemicalRuleEngine(ElementClassifier elementClassifier)
         {
+            _elementClassifier = elementClassifier;
             InitializeRules();
         }
 
@@ -23,11 +25,11 @@ namespace ChemicalSimulator.Services.Chemistry
         private void InitializeRules()
         {
             // ✅ Regras ordenadas por prioridade (maior = mais específica)
-            _rules.Add(new CombustionRule());              // 90 - Muito específica
-            _rules.Add(new NeutralizationRule());          // 85 - Muito específica
-            _rules.Add(new SynthesisRule());               // 70 - Média
-            _rules.Add(new DecompositionRule());           // 60 - Média
-            _rules.Add(new SingleDisplacementRule());      // 50 - Mais genérica
+            _rules.Add(new CombustionRule(_elementClassifier));              // 90 - Muito específica
+            _rules.Add(new NeutralizationRule(_elementClassifier));          // 85 - Muito específica
+            _rules.Add(new SynthesisRule(_elementClassifier));               // 70 - Média
+            _rules.Add(new DecompositionRule(_elementClassifier));           // 60 - Média
+            _rules.Add(new SingleDisplacementRule(_elementClassifier));      // 50 - Mais genérica
 
             _rules.Sort((a, b) => b.Priority.CompareTo(a.Priority)); // Ordem decrescente
             

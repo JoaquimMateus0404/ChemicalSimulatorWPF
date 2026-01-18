@@ -13,10 +13,12 @@ namespace ChemicalSimulator.Services.Chemistry
     {
         private readonly ChemicalRuleEngine _ruleEngine;
         private readonly FormulaParser _parser;
+        private readonly ElementClassifier _elementClassifier;
 
-        public ReactionPredictionService()
+        public ReactionPredictionService(ElementClassifier elementClassifier)
         {
-            _ruleEngine = new ChemicalRuleEngine();
+            _elementClassifier = elementClassifier;
+            _ruleEngine = new ChemicalRuleEngine(elementClassifier);
             _parser = new FormulaParser();
         }
 

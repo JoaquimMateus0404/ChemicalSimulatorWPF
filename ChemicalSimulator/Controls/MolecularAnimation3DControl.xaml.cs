@@ -20,6 +20,7 @@ namespace ChemicalSimulator.Controls
         private Storyboard? _currentStoryboard;
         private List<Visual3D> _reagentVisuals = new();
         private List<Visual3D> _productVisuals = new();
+        private BillboardTextVisual3D? _reactionArrow; // SETA DE REAÇÃO
         
         // Cores específicas para cada elemento químico (CPK colors)
         private static readonly Dictionary<string, Color> ElementColors = new()
@@ -76,6 +77,17 @@ namespace ChemicalSimulator.Controls
                 xPosition += 4;
             }
             
+            // ADICIONAR SETA DE REAÇÃO NO CENTRO
+            _reactionArrow = new BillboardTextVisual3D
+            {
+                Text = "→",
+                Position = new Point3D(0, 0, 0),
+                Foreground = new SolidColorBrush(Color.FromRgb(0, 212, 255)), // Ciano brilhante
+                FontSize = 48,
+                FontWeight = FontWeights.Bold
+            };
+            viewport3D.Children.Add(_reactionArrow);
+            
             // Criar representações 3D dos produtos (inicialmente invisíveis)
             xPosition = 4;
             foreach (var component in reaction.Products)
@@ -125,11 +137,15 @@ namespace ChemicalSimulator.Controls
                 
                 Color atomColor = GetElementColor(atoms[i]);
                 
+                // Criar brush MUTÁVEL para permitir animações de cor
+                var brush = new SolidColorBrush(atomColor);
+                // NÃO chamar .Freeze() para manter animável!
+                
                 var sphere = new SphereVisual3D
                 {
                     Center = new Point3D(x + offsetX, y + offsetY, 0),
                     Radius = radius,
-                    Fill = new SolidColorBrush(atomColor)
+                    Fill = brush
                 };
                 
                 viewport3D.Children.Add(sphere);
@@ -217,49 +233,245 @@ namespace ChemicalSimulator.Controls
             }
             _reagentVisuals.Clear();
             _productVisuals.Clear();
+            
+            // Remover seta de reação
+            if (_reactionArrow != null)
+            {
+                viewport3D.Children.Remove(_reactionArrow);
+                _reactionArrow = null;
+            }
         }
         
         /// <summary>
-        /// Inicia animação simplificada: reagentes desaparecem, produtos aparecem
+        /// Inicia animação PROFISSIONAL com 5 etapas visíveis + seta de reação
         /// </summary>
         public void StartAnimation(double animationSpeed = 1.0)
         {
             StopAnimation();
+            ResetPositions(); // Garantir estado inicial
             
             _currentStoryboard = new Storyboard();
-            double duration = 4.0 / animationSpeed; // 4 segundos base
             
-            // Fase 1: Esconder reagentes (0-50%)
+            if (_currentStoryboard == null) return; // Safety check
+            
+            double stepDuration = 2.0 / animationSpeed; // 2 segundos por etapa
+            double totalDuration = stepDuration * 5;
+            
+            // ===== ETAPA 1: Aproximação dos Reagentes (0-20%) =====
+            AnimateStep1_Approach(stepDuration * 0);
+            
+            // ===== ETAPA 2: Colisão e Formação do Complexo Ativado (20-40%) =====
+            AnimateStep2_Collision(stepDuration * 1);
+            
+            // ===== ETAPA 3: Quebra de Ligações Antigas (40-60%) =====
+            AnimateStep3_BreakBonds(stepDuration * 2);
+            
+            // ===== ETAPA 4: Formação de Novas Ligações (60-80%) =====
+            AnimateStep4_FormBonds(stepDuration * 3);
+            
+            // ===== ETAPA 5: Separação dos Produtos (80-100%) =====
+            AnimateStep5_Separation(stepDuration * 4);
+            
+            // Eventos de progresso
+            var progressTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+            
+            DateTime startTime = DateTime.Now;
+            progressTimer.Tick += (s, e) =>
+            {
+                double elapsed = (DateTime.Now - startTime).TotalSeconds;
+                double progress = Math.Min(elapsed / totalDuration, 1.0) * 100;
+                
+                // Atualizar descrição conforme progresso
+                if (progress < 20)
+                    UpdateAnimationStep("⚛️ ETAPA 1: Aproximação das moléculas");
+                else if (progress < 40)
+                    UpdateAnimationStep("💥 ETAPA 2: Colisão e formação do complexo ativado");
+                else if (progress < 60)
+                    UpdateAnimationStep("🔗 ETAPA 3: Quebra das ligações antigas");
+                else if (progress < 80)
+                    UpdateAnimationStep("✨ ETAPA 4: Formação de novas ligações");
+                else if (progress < 100)
+                    UpdateAnimationStep("🚀 ETAPA 5: Separação dos produtos");
+                else
+                {
+                    UpdateAnimationStep("✅ Reação completa! Produtos formados.");
+                    progressTimer.Stop();
+                }
+            };
+            
+            progressTimer.Start();
+            _currentStoryboard.Completed += (s, e) => progressTimer.Stop();
+            _currentStoryboard.Begin();
+        }
+        
+        /// <summary>
+        /// ETAPA 1: Reagentes se aproximam do centro (movimento suave)
+        /// </summary>
+        private void AnimateStep1_Approach(double startTime)
+        {
             foreach (var visual in _reagentVisuals)
             {
                 if (visual is SphereVisual3D sphere)
                 {
-                    var fadeOut = new ObjectAnimationUsingKeyFrames();
-                    fadeOut.KeyFrames.Add(new DiscreteObjectKeyFrame(false, 
-                        KeyTime.FromTimeSpan(TimeSpan.FromSeconds(duration * 0.5))));
-                    Storyboard.SetTarget(fadeOut, sphere);
-                    Storyboard.SetTargetProperty(fadeOut, new PropertyPath("Visible"));
-                    _currentStoryboard.Children.Add(fadeOut);
+                    var currentPos = sphere.Center;
+                    var targetX = currentPos.X > 0 ? -2 : 2; // Aproximar do centro
+                    
+                    var moveAnimation = new Point3DAnimation
+                    {
+                        From = currentPos,
+                        To = new Point3D(targetX, currentPos.Y, currentPos.Z),
+                        Duration = TimeSpan.FromSeconds(2),
+                        BeginTime = TimeSpan.FromSeconds(startTime),
+                        EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
+                    };
+                    
+                    Storyboard.SetTarget(moveAnimation, sphere);
+                    Storyboard.SetTargetProperty(moveAnimation, new PropertyPath("Center"));
+                    _currentStoryboard!.Children.Add(moveAnimation);
                 }
             }
-            
-            // Fase 2: Mostrar produtos (50-100%)
+        }
+        
+        /// <summary>
+        /// ETAPA 2: Colisão - átomos vibram intensamente
+        /// </summary>
+        private void AnimateStep2_Collision(double startTime)
+        {
+            foreach (var visual in _reagentVisuals)
+            {
+                if (visual is SphereVisual3D sphere)
+                {
+                    // Vibração rápida (simulando energia cinética)
+                    var vibrationX = new DoubleAnimation
+                    {
+                        From = 0,
+                        To = 0.3,
+                        Duration = TimeSpan.FromSeconds(0.1),
+                        BeginTime = TimeSpan.FromSeconds(startTime),
+                        AutoReverse = true,
+                        RepeatBehavior = new RepeatBehavior(10) // 10 vibrações
+                    };
+                    
+                    // Aplicar transformação (necessário adicionar TranslateTransform3D)
+                    // Por simplificação, vamos aumentar/diminuir o raio para simular vibração
+                    var pulseAnimation = new DoubleAnimation
+                    {
+                        From = sphere.Radius,
+                        To = sphere.Radius * 1.3,
+                        Duration = TimeSpan.FromSeconds(0.15),
+                        BeginTime = TimeSpan.FromSeconds(startTime),
+                        AutoReverse = true,
+                        RepeatBehavior = new RepeatBehavior(6)
+                    };
+                    
+                    Storyboard.SetTarget(pulseAnimation, sphere);
+                    Storyboard.SetTargetProperty(pulseAnimation, new PropertyPath("Radius"));
+                    _currentStoryboard!.Children.Add(pulseAnimation);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// ETAPA 3: Quebra de ligações - reagentes encolhem até desaparecer
+        /// </summary>
+        private void AnimateStep3_BreakBonds(double startTime)
+        {
+            foreach (var visual in _reagentVisuals)
+            {
+                if (visual is SphereVisual3D sphere)
+                {
+                    // Encolher até quase invisível
+                    var shrinkAnimation = new DoubleAnimation
+                    {
+                        From = sphere.Radius,
+                        To = 0.05,
+                        Duration = TimeSpan.FromSeconds(1.5),
+                        BeginTime = TimeSpan.FromSeconds(startTime),
+                        EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+                    };
+                    
+                    Storyboard.SetTarget(shrinkAnimation, sphere);
+                    Storyboard.SetTargetProperty(shrinkAnimation, new PropertyPath("Radius"));
+                    _currentStoryboard!.Children.Add(shrinkAnimation);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// ETAPA 4: Formação de ligações - produtos crescem do nada
+        /// </summary>
+        private void AnimateStep4_FormBonds(double startTime)
+        {
             foreach (var visual in _productVisuals)
             {
                 if (visual is SphereVisual3D sphere)
                 {
-                    var fadeIn = new ObjectAnimationUsingKeyFrames();
-                    fadeIn.KeyFrames.Add(new DiscreteObjectKeyFrame(true, 
-                        KeyTime.FromTimeSpan(TimeSpan.FromSeconds(duration * 0.5))));
-                    Storyboard.SetTarget(fadeIn, sphere);
-                    Storyboard.SetTargetProperty(fadeIn, new PropertyPath("Visible"));
-                    _currentStoryboard.Children.Add(fadeIn);
+                    sphere.Visible = true; // Garantir visibilidade
+                    sphere.Radius = 0.05; // Começar minúsculo
+                    
+                    // Crescer do nada com efeito "pop"
+                    var growAnimation = new DoubleAnimation
+                    {
+                        From = 0.05,
+                        To = 0.5,
+                        Duration = TimeSpan.FromSeconds(1.5),
+                        BeginTime = TimeSpan.FromSeconds(startTime),
+                        EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 }
+                    };
+                    
+                    Storyboard.SetTarget(growAnimation, sphere);
+                    Storyboard.SetTargetProperty(growAnimation, new PropertyPath("Radius"));
+                    _currentStoryboard!.Children.Add(growAnimation);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// ETAPA 5: Produtos se afastam para posições finais
+        /// </summary>
+        private void AnimateStep5_Separation(double startTime)
+        {
+            foreach (var visual in _productVisuals)
+            {
+                if (visual is SphereVisual3D sphere)
+                {
+                    var currentPos = sphere.Center;
+                    var targetX = currentPos.X < 0 ? currentPos.X - 2 : currentPos.X + 2;
+                    
+                    var separateAnimation = new Point3DAnimation
+                    {
+                        To = new Point3D(targetX, currentPos.Y, currentPos.Z),
+                        Duration = TimeSpan.FromSeconds(2),
+                        BeginTime = TimeSpan.FromSeconds(startTime),
+                        EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    
+                    Storyboard.SetTarget(separateAnimation, sphere);
+                    Storyboard.SetTargetProperty(separateAnimation, new PropertyPath("Center"));
+                    _currentStoryboard!.Children.Add(separateAnimation);
                 }
             }
             
-            UpdateAnimationStep("Animando reação...");
-            _currentStoryboard.Completed += (s, e) => UpdateAnimationStep("Animação concluída!");
-            _currentStoryboard.Begin();
+            // Esconder completamente os reagentes no final
+            var hideReagentsAnimation = new ObjectAnimationUsingKeyFrames();
+            hideReagentsAnimation.KeyFrames.Add(new DiscreteObjectKeyFrame(false, 
+                KeyTime.FromTimeSpan(TimeSpan.FromSeconds(startTime + 0.5))));
+            
+            foreach (var visual in _reagentVisuals)
+            {
+                if (visual is SphereVisual3D sphere)
+                {
+                    var hideAnim = new ObjectAnimationUsingKeyFrames();
+                    hideAnim.KeyFrames.Add(new DiscreteObjectKeyFrame(false, 
+                        KeyTime.FromTimeSpan(TimeSpan.FromSeconds(startTime + 0.5))));
+                    Storyboard.SetTarget(hideAnim, sphere);
+                    Storyboard.SetTargetProperty(hideAnim, new PropertyPath("Visible"));
+                    _currentStoryboard!.Children.Add(hideAnim);
+                }
+            }
         }
         
         public void StopAnimation()
@@ -270,17 +482,31 @@ namespace ChemicalSimulator.Controls
         
         public void ResetPositions()
         {
-            // Mostrar reagentes, esconder produtos
+            // Parar animação se estiver rodando
+            StopAnimation();
+            
+            // Mostrar reagentes com cor e tamanho originais
             foreach (var visual in _reagentVisuals)
             {
                 if (visual is SphereVisual3D sphere)
+                {
                     sphere.Visible = true;
+                    sphere.Radius = 0.5; // Tamanho original
+                    
+                    // Restaurar cor original (opaca)
+                    var currentColor = ((SolidColorBrush)sphere.Fill).Color;
+                    sphere.Fill = new SolidColorBrush(Color.FromArgb(255, currentColor.R, currentColor.G, currentColor.B));
+                }
             }
             
+            // Esconder produtos completamente
             foreach (var visual in _productVisuals)
             {
                 if (visual is SphereVisual3D sphere)
+                {
                     sphere.Visible = false;
+                    sphere.Radius = 0.5; // Preparar para próxima animação
+                }
             }
             
             UpdateAnimationStep("Posições resetadas. Clique em INICIAR.");

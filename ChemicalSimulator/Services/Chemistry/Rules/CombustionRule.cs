@@ -9,7 +9,7 @@ namespace ChemicalSimulator.Services.Chemistry.Rules
     /// </summary>
     public class CombustionRule : ChemicalRule
     {
-        public CombustionRule()
+        public CombustionRule(ElementClassifier elementClassifier) : base(elementClassifier)
         {
             Name = "Combustão Completa";
             Type = ReactionType.Combustion;

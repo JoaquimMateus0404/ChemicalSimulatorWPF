@@ -10,7 +10,7 @@ namespace ChemicalSimulator.Services.Chemistry.Rules
     /// </summary>
     public class SynthesisRule : ChemicalRule
     {
-        public SynthesisRule()
+        public SynthesisRule(ElementClassifier elementClassifier) : base(elementClassifier)
         {
             Name = "🧪 Síntese";
             Priority = 70;

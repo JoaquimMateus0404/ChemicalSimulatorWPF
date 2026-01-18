@@ -9,7 +9,7 @@ namespace ChemicalSimulator.Services.Chemistry.Rules
     /// </summary>
     public class NeutralizationRule : ChemicalRule
     {
-        public NeutralizationRule()
+        public NeutralizationRule(ElementClassifier elementClassifier) : base(elementClassifier)
         {
             Name = "Neutralização (Ácido-Base)";
             Type = ReactionType.Neutralization;

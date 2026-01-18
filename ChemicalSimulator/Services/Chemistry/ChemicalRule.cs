@@ -25,6 +25,13 @@ namespace ChemicalSimulator.Services.Chemistry
     /// </summary>
     public abstract class ChemicalRule
     {
+        protected readonly ElementClassifier ElementClassifier;
+
+        protected ChemicalRule(ElementClassifier elementClassifier)
+        {
+            ElementClassifier = elementClassifier;
+        }
+
         /// <summary>
         /// Nome da regra
         /// </summary>

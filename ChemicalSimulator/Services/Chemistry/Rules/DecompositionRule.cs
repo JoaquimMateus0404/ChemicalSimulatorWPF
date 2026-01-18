@@ -10,7 +10,7 @@ namespace ChemicalSimulator.Services.Chemistry.Rules
     /// </summary>
     public class DecompositionRule : ChemicalRule
     {
-        public DecompositionRule()
+        public DecompositionRule(ElementClassifier elementClassifier) : base(elementClassifier)
         {
             Name = "💥 Decomposição";
             Priority = 60;

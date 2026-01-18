@@ -31,7 +31,8 @@ namespace ChemicalSimulator.ViewModels
         private readonly DispatcherTimer _reactionProgressTimer;
         
         // 🆕 NOVO: Serviço profissional de predição química
-        private readonly Services.Chemistry.ReactionPredictionService _predictionService;
+        private Services.Chemistry.ReactionPredictionService _predictionService = null!;
+        private Services.Chemistry.ElementClassifier _elementClassifier = null!;
         #endregion
 
         #region Properties - Compostos Disponíveis
@@ -381,13 +382,14 @@ namespace ChemicalSimulator.ViewModels
             _compoundDataLoader = new CompoundDataLoader();
             _chemistryEngine = new ChemistryEngine();
             _reactionPredictor = new ReactionPredictor();
-            
-            // 🆕 NOVO: Inicializar serviço profissional de predição
-            _predictionService = new Services.Chemistry.ReactionPredictionService();
-            System.Diagnostics.Debug.WriteLine("✅ ReactionPredictionService inicializado!");
 
             // Carregar dados
             LoadChemicalData();
+            
+            // 🆕 NOVO: Inicializar classificador de elementos e serviço de predição
+            _elementClassifier = new Services.Chemistry.ElementClassifier(AvailableElements);
+            _predictionService = new Services.Chemistry.ReactionPredictionService(_elementClassifier);
+            System.Diagnostics.Debug.WriteLine("✅ ElementClassifier e ReactionPredictionService inicializados!");
 
             // Inicializar comandos
             AddReactantCommand = new RelayCommand(AddReactant, CanAddReactant);

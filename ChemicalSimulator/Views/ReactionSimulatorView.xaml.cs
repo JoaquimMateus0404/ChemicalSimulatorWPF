@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using ChemicalSimulator.ViewModels;
+using ChemicalSimulator.Models;
 
 namespace ChemicalSimulator.Views
 {
@@ -83,8 +85,51 @@ namespace ChemicalSimulator.Views
                 _ => 1.0
             };
         }
+
+        // ========== MOLECULE BUILDER HANDLERS ==========
+
+        private void BuildReactant1_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null) return;
+
+            var dialog = new MoleculeBuilderDialog(ViewModel.AvailableElements.ToList())
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true && dialog.CreatedCompound != null)
+            {
+                // Adicionar ao AvailableCompounds temporariamente
+                ViewModel.AvailableCompounds.Add(dialog.CreatedCompound);
+                
+                // Selecionar automaticamente
+                ViewModel.SelectedReactant1 = dialog.CreatedCompound;
+
+                System.Diagnostics.Debug.WriteLine($"✅ Molécula criada: {dialog.CreatedCompound.Formula} ({dialog.CreatedCompound.Name})");
+            }
+        }
+
+        private void BuildReactant2_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null) return;
+
+            var dialog = new MoleculeBuilderDialog(ViewModel.AvailableElements.ToList())
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true && dialog.CreatedCompound != null)
+            {
+                // Adicionar ao AvailableCompounds temporariamente
+                ViewModel.AvailableCompounds.Add(dialog.CreatedCompound);
+                
+                // Selecionar automaticamente
+                ViewModel.SelectedReactant2 = dialog.CreatedCompound;
+
+                System.Diagnostics.Debug.WriteLine($"✅ Molécula criada: {dialog.CreatedCompound.Formula} ({dialog.CreatedCompound.Name})");
+            }
+        }
     }
 }
-
 
 
