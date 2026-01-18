@@ -1,29 +1,754 @@
 <UserControl x:Class="ChemicalSimulator.Views.ReactionSimulatorView"
-			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-			 xmlns:conv="clr-namespace:ChemicalSimulator.Converters"
-			 xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-			 xmlns:oxy="http://oxyplot.org/wpf"
-			 xmlns:sys="clr-namespace:System;assembly=System.Runtime"
-			 xmlns:models="clr-namespace:ChemicalSimulator.Models"
-			 xmlns:diag="clr-namespace:System.Diagnostics;assembly=System.Runtime"
-			 mc:Ignorable="d"
-			 d:DesignHeight="720"
-			 d:DesignWidth="1200">
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:conv="clr-namespace:ChemicalSimulator.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1400"
+             Background="#0a0e27">
 
-	<UserControl.Resources>
-		
-	</UserControl.Resources>
+    <UserControl.Resources>
+        <conv:BooleanToColorConverter x:Key="BoolToColorConverter"/>
+        <conv:EnergyToColorConverter x:Key="EnergyToColorConverter"/>
+        <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <conv:MultiplyConverter x:Key="MultiplyConverter"/>
+        
+        <!-- Estilos de Animação -->
+        <Storyboard x:Key="GlowAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0.6" To="1.0" Duration="0:0:1.5"
+                           AutoReverse="True"/>
+        </Storyboard>
 
-	<Grid Background="{StaticResource BackgroundBrush}">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" />
-			<RowDefinition Height="*" />
-			<RowDefinition Height="Auto" />
-		</Grid.RowDefinitions>
+        <Storyboard x:Key="PulseAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                           From="1.0" To="1.1" Duration="0:0:0.8"
+                           AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                           From="1.0" To="1.1" Duration="0:0:0.8"
+                           AutoReverse="True"/>
+        </Storyboard>
 
-		
-	</Grid>
+        <Storyboard x:Key="RotateAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                           From="0" To="360" Duration="0:0:4"/>
+        </Storyboard>
+
+        <!-- Estilo para Cards -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#1a1f3a"/>
+            <Setter Property="BorderBrush" Value="#2a3555"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#0a0e27" BlurRadius="20" ShadowDepth="5" Opacity="0.8"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo para Títulos -->
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#00d4ff"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+
+        <!-- Estilo para ComboBox -->
+        <Style x:Key="ModernComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#2a3555"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#00d4ff"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="40"/>
+        </Style>
+
+        <!-- Estilo para Sliders -->
+        <Style x:Key="ModernSlider" TargetType="Slider">
+            <Setter Property="Foreground" Value="#00d4ff"/>
+            <Setter Property="Background" Value="#2a3555"/>
+            <Setter Property="Height" Value="30"/>
+        </Style>
+
+        <!-- Estilo para Botões -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#00d4ff"/>
+            <Setter Property="Foreground" Value="#0a0e27"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#00ffff"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#555"/>
+                    <Setter Property="Foreground" Value="#888"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#ff4444"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#ff6666"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Cabeçalho -->
+            <Border Grid.Row="0" Background="#1a1f3a" CornerRadius="15" Padding="25" Margin="0,0,0,20">
+                <Border.Effect>
+                    <DropShadowEffect Color="#00d4ff" BlurRadius="30" ShadowDepth="0" Opacity="0.3"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="⚗️ SIMULADOR DE REAÇÕES QUÍMICAS" 
+                               FontSize="32" FontWeight="Bold" 
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Análise Termodinâmica • Cinética • Animação Molecular" 
+                               FontSize="14" 
+                               Foreground="#00d4ff"
+                               HorizontalAlignment="Center"
+                               Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Conteúdo Principal -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.2*"/>
+                    <ColumnDefinition Width="0.8*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Coluna Esquerda: Entrada e Visualização -->
+                <StackPanel Grid.Column="0">
+
+                    <!-- SEÇÃO 1: Seleção de Reagentes -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="🧪 REAGENTES" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Reagente 1 -->
+                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                    <TextBlock Text="Reagente 1" Foreground="#aaa" FontSize="12" Margin="0,0,0,5"/>
+                                    <ComboBox Style="{StaticResource ModernComboBox}"
+                                              ItemsSource="{Binding AvailableCompounds}"
+                                              SelectedItem="{Binding SelectedReactant1}"
+                                              DisplayMemberPath="Name"/>
+                                    
+                                    <TextBlock Text="Quantidade (g)" Foreground="#aaa" FontSize="12" Margin="0,10,0,5"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Slider Grid.Column="0" 
+                                                Style="{StaticResource ModernSlider}"
+                                                Minimum="0.1" Maximum="100" 
+                                                Value="{Binding Reactant1Amount}"
+                                                TickFrequency="0.1"
+                                                IsSnapToTickEnabled="True"/>
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding Reactant1Amount, StringFormat={}{0:F1} g}"
+                                                   Foreground="White" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="10,0,0,0"
+                                                   FontWeight="Bold"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Símbolo + -->
+                                <TextBlock Grid.Column="1" 
+                                           Text="+" 
+                                           FontSize="32" 
+                                           FontWeight="Bold"
+                                           Foreground="#00d4ff"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Margin="15,0">
+                                    <TextBlock.RenderTransform>
+                                        <ScaleTransform ScaleX="1" ScaleY="1" CenterX="10" CenterY="10"/>
+                                    </TextBlock.RenderTransform>
+                                    <TextBlock.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard Storyboard="{StaticResource PulseAnimation}"/>
+                                        </EventTrigger>
+                                    </TextBlock.Triggers>
+                                </TextBlock>
+
+                                <!-- Reagente 2 -->
+                                <StackPanel Grid.Column="2" Margin="10,0,0,0">
+                                    <TextBlock Text="Reagente 2 (Opcional)" Foreground="#aaa" FontSize="12" Margin="0,0,0,5"/>
+                                    <ComboBox Style="{StaticResource ModernComboBox}"
+                                              ItemsSource="{Binding AvailableCompounds}"
+                                              SelectedItem="{Binding SelectedReactant2}"
+                                              DisplayMemberPath="Name"/>
+                                    
+                                    <TextBlock Text="Quantidade (g)" Foreground="#aaa" FontSize="12" Margin="0,10,0,5"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Slider Grid.Column="0" 
+                                                Style="{StaticResource ModernSlider}"
+                                                Minimum="0.1" Maximum="100" 
+                                                Value="{Binding Reactant2Amount}"
+                                                TickFrequency="0.1"
+                                                IsSnapToTickEnabled="True"/>
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding Reactant2Amount, StringFormat={}{0:F1} g}"
+                                                   Foreground="White" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="10,0,0,0"
+                                                   FontWeight="Bold"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Botão Prever Produtos -->
+                            <Button Content="🔮 PREVER PRODUTOS AUTOMATICAMENTE"
+                                    Style="{StaticResource ActionButton}"
+                                    Command="{Binding PredictProductsCommand}"
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SEÇÃO 2: Equação Balanceada -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="⚖️ EQUAÇÃO QUÍMICA" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <!-- Equação -->
+                            <Border Background="#0a0e27" 
+                                    BorderBrush="{Binding IsBalanced, Converter={StaticResource BoolToColorConverter}}"
+                                    BorderThickness="3"
+                                    CornerRadius="10" 
+                                    Padding="20"
+                                    Margin="0,0,0,15">
+                                <TextBlock Text="{Binding BalancedEquation, FallbackValue='Selecione reagentes...'}"
+                                           FontSize="18"
+                                           FontFamily="Consolas"
+                                           Foreground="White"
+                                           FontWeight="Bold"
+                                           TextWrapping="Wrap"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Status e Tipo -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <Ellipse Width="12" Height="12" 
+                                             Fill="{Binding IsBalanced, Converter={StaticResource BoolToColorConverter}}"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,8,0"/>
+                                    <TextBlock Text="Balanceada" Foreground="White" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="1" 
+                                           Text="{Binding ReactionTypeText, FallbackValue='Tipo: N/A'}"
+                                           Foreground="#00d4ff"
+                                           HorizontalAlignment="Right"
+                                           FontWeight="Bold"/>
+                            </Grid>
+
+                            <!-- Botão Balancear -->
+                            <Button Content="⚖️ AUTO-BALANCEAR"
+                                    Style="{StaticResource ActionButton}"
+                                    Command="{Binding AutoBalanceCommand}"
+                                    Margin="0,15,0,0"
+                                    HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SEÇÃO 3: Condições da Reação -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="🔥 CONDIÇÕES DA REAÇÃO" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <!-- Temperatura -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <TextBlock Grid.Row="0" 
+                                           Text="🌡️ Temperatura" 
+                                           Foreground="White" 
+                                           FontSize="14"
+                                           Margin="0,0,0,8"/>
+                                
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Slider Grid.Column="0"
+                                            Style="{StaticResource ModernSlider}"
+                                            Minimum="0" Maximum="500"
+                                            Value="{Binding TemperatureCelsius}"
+                                            TickFrequency="1"
+                                            IsSnapToTickEnabled="True"/>
+                                    
+                                    <Border Grid.Column="1" 
+                                            Background="#00d4ff" 
+                                            CornerRadius="8"
+                                            Padding="15,5"
+                                            Margin="15,0,0,0">
+                                        <TextBlock Text="{Binding TemperatureDisplay}"
+                                                   Foreground="#0a0e27"
+                                                   FontWeight="Bold"
+                                                   FontSize="14"/>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+
+                            <!-- Pressão -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <TextBlock Grid.Row="0" 
+                                           Text="💨 Pressão" 
+                                           Foreground="White" 
+                                           FontSize="14"
+                                           Margin="0,0,0,8"/>
+                                
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Slider Grid.Column="0"
+                                            Style="{StaticResource ModernSlider}"
+                                            Minimum="10" Maximum="1000"
+                                            Value="{Binding Pressure}"
+                                            TickFrequency="1"
+                                            IsSnapToTickEnabled="True"/>
+                                    
+                                    <Border Grid.Column="1" 
+                                            Background="#00d4ff" 
+                                            CornerRadius="8"
+                                            Padding="15,5"
+                                            Margin="15,0,0,0">
+                                        <TextBlock Text="{Binding PressureDisplay}"
+                                                   Foreground="#0a0e27"
+                                                   FontWeight="Bold"
+                                                   FontSize="14"/>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+
+                            <!-- Catalisador -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <CheckBox Grid.Column="0" 
+                                          Content="⚡ Usar Catalisador"
+                                          IsChecked="{Binding UsesCatalyst}"
+                                          Foreground="White"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,15,0"/>
+
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Catalyst, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding UsesCatalyst}"
+                                         Background="#2a3555"
+                                         Foreground="White"
+                                         BorderBrush="#00d4ff"
+                                         BorderThickness="2"
+                                         Padding="10"
+                                         FontSize="14"
+                                         VerticalContentAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SEÇÃO 4: Animação Molecular -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="🎬 ANIMAÇÃO MOLECULAR" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <!-- Canvas de Animação -->
+                            <Border Background="#0a0e27" 
+                                    BorderBrush="#2a3555"
+                                    BorderThickness="2"
+                                    CornerRadius="10"
+                                    Height="300"
+                                    Margin="0,0,0,15">
+                                <Canvas x:Name="AnimationCanvas">
+                                    <!-- Partículas de Reagentes (esquerda) -->
+                                    <Ellipse x:Name="Reagent1Particle"
+                                             Width="60" Height="60"
+                                             Fill="#ff6b6b"
+                                             Canvas.Left="50" Canvas.Top="120">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect Color="#ff6b6b" BlurRadius="20" ShadowDepth="0"/>
+                                        </Ellipse.Effect>
+                                    </Ellipse>
+
+                                    <Ellipse x:Name="Reagent2Particle"
+                                             Width="60" Height="60"
+                                             Fill="#4ecdc4"
+                                             Canvas.Left="150" Canvas.Top="120">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect Color="#4ecdc4" BlurRadius="20" ShadowDepth="0"/>
+                                        </Ellipse.Effect>
+                                    </Ellipse>
+
+                                    <!-- Energia (centro) -->
+                                    <Path x:Name="EnergyBurst"
+                                          Data="M 0,0 L 10,-30 L 20,0 L 30,-30 L 40,0"
+                                          Stroke="#ffeb3b"
+                                          StrokeThickness="3"
+                                          Canvas.Left="300" Canvas.Top="150">
+                                        <Path.RenderTransform>
+                                            <RotateTransform Angle="0" CenterX="20" CenterY="0"/>
+                                        </Path.RenderTransform>
+                                        <Path.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard Storyboard="{StaticResource RotateAnimation}"/>
+                                            </EventTrigger>
+                                        </Path.Triggers>
+                                    </Path>
+
+                                    <!-- Produtos (direita) -->
+                                    <Ellipse x:Name="Product1Particle"
+                                             Width="60" Height="60"
+                                             Fill="#95e1d3"
+                                             Canvas.Left="550" Canvas.Top="100">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect Color="#95e1d3" BlurRadius="20" ShadowDepth="0"/>
+                                        </Ellipse.Effect>
+                                    </Ellipse>
+
+                                    <Ellipse x:Name="Product2Particle"
+                                             Width="60" Height="60"
+                                             Fill="#f38181"
+                                             Canvas.Left="550" Canvas.Top="180">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect Color="#f38181" BlurRadius="20" ShadowDepth="0"/>
+                                        </Ellipse.Effect>
+                                    </Ellipse>
+
+                                    <!-- Seta de Reação -->
+                                    <Path Data="M 0,0 L 100,0 L 95,-5 M 100,0 L 95,5"
+                                          Stroke="#00d4ff"
+                                          StrokeThickness="4"
+                                          Canvas.Left="370" Canvas.Top="150">
+                                        <Path.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard>
+                                                    <Storyboard RepeatBehavior="Forever">
+                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                       From="0.3" To="1.0" Duration="0:0:1"
+                                                                       AutoReverse="True"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Path.Triggers>
+                                    </Path>
+                                </Canvas>
+                            </Border>
+
+                            <!-- Barra de Progresso -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="Progresso:" 
+                                           Foreground="White"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"/>
+
+                                <ProgressBar Grid.Column="1"
+                                             Value="{Binding AnimationProgress}"
+                                             Maximum="100"
+                                             Height="25"
+                                             Background="#2a3555"
+                                             Foreground="#00d4ff"
+                                             BorderBrush="#00d4ff"
+                                             BorderThickness="2"/>
+                            </Grid>
+
+                            <!-- Descrição da Etapa -->
+                            <TextBlock Text="{Binding AnimationStepDescription, FallbackValue='Clique em Iniciar para começar'}"
+                                       Foreground="#ffeb3b"
+                                       FontSize="14"
+                                       FontWeight="Bold"
+                                       TextAlignment="Center"
+                                       Margin="0,0,0,15"/>
+
+                            <!-- Controles de Animação -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0" 
+                                        Content="▶️ Iniciar"
+                                        Style="{StaticResource ActionButton}"
+                                        Command="{Binding StartAnimationCommand}"
+                                        Margin="0,0,5,0"/>
+
+                                <Button Grid.Column="1" 
+                                        Content="⏸️ Pausar"
+                                        Style="{StaticResource ActionButton}"
+                                        Command="{Binding PauseAnimationCommand}"
+                                        Margin="5,0"/>
+
+                                <Button Grid.Column="2" 
+                                        Content="🔄 Resetar"
+                                        Style="{StaticResource ActionButton}"
+                                        Command="{Binding ResetAnimationCommand}"
+                                        Margin="5,0,15,0"/>
+
+                                <ComboBox Grid.Column="3"
+                                          SelectedValue="{Binding AnimationSpeed}"
+                                          Width="120"
+                                          Style="{StaticResource ModernComboBox}">
+                                    <ComboBoxItem Content="Lenta"/>
+                                    <ComboBoxItem Content="Normal" IsSelected="True"/>
+                                    <ComboBoxItem Content="Rápida"/>
+                                    <ComboBoxItem Content="Instantânea"/>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <!-- Coluna Direita: Análise e Resultados -->
+                <StackPanel Grid.Column="1">
+
+                    <!-- SEÇÃO 5: Termodinâmica -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="🔬 ANÁLISE TERMODINÂMICA" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <!-- Tipo de Reação -->
+                            <Border Background="{Binding IsExothermic, Converter={StaticResource EnergyToColorConverter}}"
+                                    CornerRadius="10"
+                                    Padding="15"
+                                    Margin="0,0,0,15">
+                                <TextBlock Text="{Binding EnergyTypeText}"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Dados Termodinâmicos -->
+                            <StackPanel>
+                                <!-- ΔH -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="ΔH (Entalpia):" 
+                                               Foreground="#aaa" 
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding EnthalpyChange, StringFormat={}{0:F2} kJ/mol}"
+                                               Foreground="{Binding IsExothermic, Converter={StaticResource EnergyToColorConverter}}"
+                                               FontWeight="Bold"
+                                               FontSize="16"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- ΔG -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="ΔG (Gibbs):" 
+                                               Foreground="#aaa" 
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding GibbsFreeEnergy, StringFormat={}{0:F2} kJ/mol}"
+                                               Foreground="{Binding IsSpontaneous, Converter={StaticResource BoolToColorConverter}}"
+                                               FontWeight="Bold"
+                                               FontSize="16"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Ea -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Ea (Ativação):" 
+                                               Foreground="#aaa" 
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding ActivationEnergy, StringFormat={}{0:F2} kJ/mol}"
+                                               Foreground="#ffeb3b"
+                                               FontWeight="Bold"
+                                               FontSize="16"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Espontaneidade -->
+                                <Border Background="{Binding IsSpontaneous, Converter={StaticResource BoolToColorConverter}}"
+                                        CornerRadius="8"
+                                        Padding="10"
+                                        Margin="0,15,0,0">
+                                    <TextBlock Text="{Binding IsSpontaneous, StringFormat='Reação {0}'}"
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"
+                                               FontWeight="Bold"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SEÇÃO 6: Diagrama de Energia -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="📊 DIAGRAMA DE ENERGIA" Style="{StaticResource SectionTitleStyle}"/>
+                            
+                            <Border Background="#0a0e27" 
+                                    BorderBrush="#2a3555"
+                                    BorderThickness="2"
+                                    CornerRadius="10"
+                                    Height="300">
+                                <oxy:PlotView Model="{Binding EnergyDiagram}"
+                                              Background="Transparent"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SEÇÃO 7: Reagente Limitante e Rendimento -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="⚖️ CÁLCULOS ESTEQUIOMÉTRICOS" Style="{StaticResource SectionTitleStyle}"/>
+
+                            <!-- Reagente Limitante -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" 
+                                           Text="🎯 Reagente Limitante:" 
+                                           Foreground="#aaa"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="{Binding LimitingReagent, FallbackValue='N/A'}"
+                                           Foreground="#ff6b6b"
+                                           FontWeight="Bold"
+                                           FontSize="16"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Rendimento Teórico -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" 
+                                           Text="📐 Rendimento Teórico:" 
+                                           Foreground="#aaa"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="{Binding TheoreticalYield, StringFormat={}{0:F2} g}"
+                                           Foreground="#4ecdc4"
+                                           FontWeight="Bold"
+                                           FontSize="16"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Rendimento Percentual -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" 
+                                           Text="📊 Rendimento %:" 
+                                           Foreground="#aaa"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="{Binding PercentYield, StringFormat={}{0:F1}%}"
+                                           Foreground="#95e1d3"
+                                           FontWeight="Bold"
+                                           FontSize="16"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
 </UserControl>
