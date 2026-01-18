@@ -29,6 +29,9 @@ namespace ChemicalSimulator.ViewModels
         private readonly CompoundDataLoader _compoundDataLoader;
         private readonly DispatcherTimer _animationTimer;
         private readonly DispatcherTimer _reactionProgressTimer;
+        
+        // 🆕 NOVO: Serviço profissional de predição química
+        private readonly Services.Chemistry.ReactionPredictionService _predictionService;
         #endregion
 
         #region Properties - Compostos Disponíveis
@@ -70,7 +73,11 @@ namespace ChemicalSimulator.ViewModels
             {
                 if (SetProperty(ref _selectedReactant1, value))
                 {
+                    System.Diagnostics.Debug.WriteLine($"🔄 SelectedReactant1 alterado para: {value?.Name ?? "NULL"}");
                     UpdateReaction();
+                    
+                    // Forçar reavaliação dos comandos
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -83,7 +90,11 @@ namespace ChemicalSimulator.ViewModels
             {
                 if (SetProperty(ref _selectedReactant2, value))
                 {
+                    System.Diagnostics.Debug.WriteLine($"🔄 SelectedReactant2 alterado para: {value?.Name ?? "NULL"}");
                     UpdateReaction();
+                    
+                    // Forçar reavaliação dos comandos
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -184,6 +195,13 @@ namespace ChemicalSimulator.ViewModels
         {
             get => _reactionTypeText;
             set => SetProperty(ref _reactionTypeText, value);
+        }
+        
+        private Reaction? _currentReaction;
+        public Reaction? CurrentReaction
+        {
+            get => _currentReaction;
+            set => SetProperty(ref _currentReaction, value);
         }
         #endregion
 
@@ -363,6 +381,10 @@ namespace ChemicalSimulator.ViewModels
             _compoundDataLoader = new CompoundDataLoader();
             _chemistryEngine = new ChemistryEngine();
             _reactionPredictor = new ReactionPredictor();
+            
+            // 🆕 NOVO: Inicializar serviço profissional de predição
+            _predictionService = new Services.Chemistry.ReactionPredictionService();
+            System.Diagnostics.Debug.WriteLine("✅ ReactionPredictionService inicializado!");
 
             // Carregar dados
             LoadChemicalData();
@@ -426,7 +448,15 @@ namespace ChemicalSimulator.ViewModels
         #region Reaction Management
         private void UpdateReaction()
         {
-            if (SelectedReactant1 == null) return;
+            System.Diagnostics.Debug.WriteLine("🔄 UpdateReaction() chamado!");
+            
+            if (SelectedReactant1 == null)
+            {
+                System.Diagnostics.Debug.WriteLine("⚠️ SelectedReactant1 é null, saindo...");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"✅ Atualizando reação com: {SelectedReactant1.Name}");
 
             // Limpar produtos
             Products.Clear();
@@ -442,6 +472,7 @@ namespace ChemicalSimulator.ViewModels
 
             if (SelectedReactant2 != null)
             {
+                System.Diagnostics.Debug.WriteLine($"✅ Adicionando reagente 2: {SelectedReactant2.Name}");
                 Reactants.Add(new ReactionComponent
                 {
                     Molecule = ConvertCompoundToMolecule(SelectedReactant2),
@@ -452,91 +483,144 @@ namespace ChemicalSimulator.ViewModels
 
             UpdateBalancedEquation();
             CalculateLimitingReagent();
+            
+            // Criar objeto Reaction para animação 3D
+            CurrentReaction = new Reaction
+            {
+                Reactants = new List<ReactionComponent>(Reactants),
+                Products = new List<ReactionComponent>(Products)
+            };
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Reagentes atualizados: {Reactants.Count}");
         }
 
         private void PredictProducts()
         {
-            if (SelectedReactant1 == null) return;
+            System.Diagnostics.Debug.WriteLine("🔮 PredictProducts() chamado!");
+            
+            if (SelectedReactant1 == null)
+            {
+                System.Diagnostics.Debug.WriteLine("❌ SelectedReactant1 é null!");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"✅ Reagente 1: {SelectedReactant1.Name} ({SelectedReactant1.Formula})");
+            if (SelectedReactant2 != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"✅ Reagente 2: {SelectedReactant2.Name} ({SelectedReactant2.Formula})");
+            }
 
             Products.Clear();
 
             // Predição baseada em padrões de reação
             var predictedProducts = PredictProductsBasedOnReactants();
 
+            System.Diagnostics.Debug.WriteLine($"📦 Produtos previstos: {predictedProducts.Count}");
+
             foreach (var product in predictedProducts)
             {
                 Products.Add(product);
+                System.Diagnostics.Debug.WriteLine($"  ➕ Adicionado: {product.Molecule.Name}");
             }
 
             AutoBalance();
             UpdateThermodynamics();
+            
+            // Atualizar CurrentReaction para animação 3D
+            CurrentReaction = new Reaction
+            {
+                Reactants = new List<ReactionComponent>(Reactants),
+                Products = new List<ReactionComponent>(Products)
+            };
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Predição completa! Total produtos: {Products.Count}");
         }
 
         private List<ReactionComponent> PredictProductsBasedOnReactants()
         {
             var products = new List<ReactionComponent>();
 
-            if (SelectedReactant1 == null) return products;
-
-            // Exemplo: Combustão de hidrocarbonetos
-            if (SelectedReactant1.Formula.Contains("C") && SelectedReactant1.Formula.Contains("H"))
+            if (SelectedReactant1 == null)
             {
-                // Encontrar CO2 e H2O nos compostos disponíveis
-                var co2 = AvailableCompounds.FirstOrDefault(c => c.Formula == "CO2");
-                var h2o = AvailableCompounds.FirstOrDefault(c => c.Formula == "H2O");
-
-                if (co2 != null)
-                {
-                    products.Add(new ReactionComponent
-                    {
-                        Molecule = ConvertCompoundToMolecule(co2),
-                        Coefficient = 1,
-                        Phase = "(g)"
-                    });
-                }
-
-                if (h2o != null)
-                {
-                    products.Add(new ReactionComponent
-                    {
-                        Molecule = ConvertCompoundToMolecule(h2o),
-                        Coefficient = 1,
-                        Phase = "(l)"
-                    });
-                }
-
-                ReactionTypeText = "Reação de Combustão";
-                ActivationEnergy = 150; // kJ/mol
+                System.Diagnostics.Debug.WriteLine("⚠️ PredictProductsBasedOnReactants: SelectedReactant1 é null!");
+                return products;
             }
-            // Exemplo: Ácido + Base → Sal + Água
-            else if (IsAcid(SelectedReactant1) && SelectedReactant2 != null && IsBase(SelectedReactant2))
-            {
-                // Reação ácido-base
-                var h2o = AvailableCompounds.FirstOrDefault(c => c.Formula == "H2O");
-                if (h2o != null)
-                {
-                    products.Add(new ReactionComponent
-                    {
-                        Molecule = ConvertCompoundToMolecule(h2o),
-                        Coefficient = 1,
-                        Phase = "(l)"
-                    });
-                }
 
-                ReactionTypeText = "Reação de Neutralização (Ácido-Base)";
-                ActivationEnergy = 50; // kJ/mol
-                EnthalpyChange = -57; // Reação exotérmica
-            }
-            // Decomposição
-            else if (SelectedReactant2 == null && SelectedReactant1.Formula.Length > 3)
+            System.Diagnostics.Debug.WriteLine($"🔍 🆕 USANDO NOVO MOTOR DE REGRAS QUÍMICAS!");
+            System.Diagnostics.Debug.WriteLine($"   Analisando: {SelectedReactant1.Formula}" + 
+                (SelectedReactant2 != null ? $" + {SelectedReactant2.Formula}" : ""));
+
+            // 🆕 Preparar lista de reagentes para o novo serviço
+            var reactantCompounds = new List<Compound> { SelectedReactant1 };
+            if (SelectedReactant2 != null)
             {
-                ReactionTypeText = "Reação de Decomposição";
-                ActivationEnergy = 200; // kJ/mol
-                EnthalpyChange = 180; // Reação endotérmica
+                reactantCompounds.Add(SelectedReactant2);
+            }
+
+            // 🆕 Executar predição com motor de regras
+            var conditions = new Services.Chemistry.ReactionConditions
+            {
+                Temperature = Temperature,
+                Pressure = Pressure,
+                Catalyst = Catalyst
+            };
+
+            var result = _predictionService.PredictProducts(reactantCompounds, conditions);
+
+            System.Diagnostics.Debug.WriteLine($"📊 Resultado: {result.Message}");
+            System.Diagnostics.Debug.WriteLine($"   Tipo: {result.ReactionType}");
+            System.Diagnostics.Debug.WriteLine($"   Produtos: {result.Products.Count}");
+
+            // 🆕 Atualizar propriedades termodinâmicas
+            ReactionTypeText = GetReactionTypeName(result.ReactionType);
+            ActivationEnergy = result.ActivationEnergy;
+            EnthalpyChange = result.EnthalpyChange;
+
+            // 🆕 Converter MoleculeGraph → ReactionComponent
+            foreach (var productGraph in result.Products)
+            {
+                var compound = _predictionService.ConvertToCompound(productGraph);
+                
+                products.Add(new ReactionComponent
+                {
+                    Molecule = ConvertCompoundToMolecule(compound),
+                    Coefficient = 1,
+                    Phase = DeterminePhase(compound)
+                });
+
+                System.Diagnostics.Debug.WriteLine($"  ✅ Produto: {compound.Formula} ({compound.Name})");
+            }
+
+            if (!result.Success)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ {result.Message}");
             }
 
             return products;
         }
+
+        /// <summary>
+        /// Converte ReactionType enum em texto amigável
+        /// </summary>
+        private string GetReactionTypeName(Services.Chemistry.ReactionType type)
+        {
+            return type switch
+            {
+                Services.Chemistry.ReactionType.Combustion => "🔥 Reação de Combustão",
+                Services.Chemistry.ReactionType.Neutralization => "⚗️ Reação de Neutralização (Ácido-Base)",
+                Services.Chemistry.ReactionType.Synthesis => "🧪 Reação de Síntese",
+                Services.Chemistry.ReactionType.Decomposition => "💥 Reação de Decomposição",
+                Services.Chemistry.ReactionType.SingleDisplacement => "🔄 Reação de Simples Troca",
+                Services.Chemistry.ReactionType.DoubleDisplacement => "↔️ Reação de Dupla Troca",
+                Services.Chemistry.ReactionType.Redox => "⚡ Reação de Oxirredução",
+                Services.Chemistry.ReactionType.Addition => "➕ Reação de Adição",
+                Services.Chemistry.ReactionType.Substitution => "🔀 Reação de Substituição",
+                Services.Chemistry.ReactionType.NoReaction => "⚠️ Reagentes Incompatíveis - Reação Não Ocorre",
+                _ => "Reação Genérica"
+            };
+        }
+
+        // ========== MÉTODOS AUXILIARES (mantidos para compatibilidade) ==========
 
         private bool IsAcid(Compound compound)
         {
